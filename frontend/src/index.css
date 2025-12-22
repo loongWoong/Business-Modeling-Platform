@@ -386,17 +386,17 @@ body {
   text-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
 
-/* 表单元素科幻样式 */
+/* 表单元素样式 */
 .form-group label {
-  color: #94a3b8;
+  color: #000000;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #f1f5f9;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: #000000;
   transition: all 0.3s ease;
 }
 
@@ -631,7 +631,7 @@ body {
 
 .modal h2 {
   margin-bottom: 20px;
-  color: var(--text-primary);
+  color: #000000;
   font-size: 22px;
   font-weight: 600;
 }
