@@ -408,6 +408,39 @@ body {
   box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
 }
 
+/* 单选按钮和复选框样式优化 */
+.form-group input[type="radio"],
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.form-group .radio-group,
+.form-group .checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.form-group .radio-group label,
+.form-group .checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  font-weight: 400;
+  cursor: pointer;
+  width: auto;
+  font-size: 14px;
+}
+
+.form-group .radio-group label:hover,
+.form-group .checkbox-group label:hover {
+  color: var(--primary-color);
+}
+
 /* 按钮科幻样式增强 */
 .header-toolbar button {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);

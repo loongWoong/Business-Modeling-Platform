@@ -10,7 +10,7 @@ const ModelDetail = () => {
   const [relations, setRelations] = useState([])
   const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false)
   const [editingProperty, setEditingProperty] = useState(null)
-  const [newProperty, setNewProperty] = useState({ name: '', type: 'string', required: false, description: '' })
+  const [newProperty, setNewProperty] = useState({ name: '', type: 'string', required: false, description: '', isPrimaryKey: false, isForeignKey: false, defaultValue: null, constraints: [], sensitivityLevel: 'public', maskRule: null, physicalColumn: '' })
   
   // 操作反馈状态
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' })
@@ -281,7 +281,14 @@ const ModelDetail = () => {
       name: property.name,
       type: property.type,
       required: property.required,
-      description: property.description
+      description: property.description,
+      isPrimaryKey: property.isPrimaryKey || false,
+      isForeignKey: property.isForeignKey || false,
+      defaultValue: property.defaultValue || null,
+      constraints: property.constraints || [],
+      sensitivityLevel: property.sensitivityLevel || 'public',
+      maskRule: property.maskRule || null,
+      physicalColumn: property.physicalColumn || ''
     })
     setIsPropertyModalOpen(true)
   }
@@ -1017,9 +1024,45 @@ const ModelDetail = () => {
               {properties.map(property => (
                 <div key={property.id} className="card">
                   <h3>{property.name}</h3>
-                  <p>类型: {property.type}</p>
-                  <p>必填: {property.required ? '是' : '否'}</p>
-                  <p>描述: {property.description}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', margin: '12px 0' }}>
+                    <div>
+                      <strong>类型:</strong> {property.type}
+                    </div>
+                    <div>
+                      <strong>必填:</strong> {property.required ? '是' : '否'}
+                    </div>
+                    <div>
+                      <strong>主键:</strong> {property.isPrimaryKey ? '是' : '否'}
+                    </div>
+                    <div>
+                      <strong>外键:</strong> {property.isForeignKey ? '是' : '否'}
+                    </div>
+                    <div>
+                      <strong>物理字段:</strong> {property.physicalColumn || '未设置'}
+                    </div>
+                    <div>
+                      <strong>敏感级别:</strong> {property.sensitivityLevel}
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <strong>默认值:</strong> {property.defaultValue !== null ? property.defaultValue : '未设置'}
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <strong>脱敏规则:</strong> {property.maskRule || '无'}
+                    </div>
+                    {property.constraints && property.constraints.length > 0 && (
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <strong>约束规则:</strong>
+                        <ul style={{ marginLeft: '20px', marginTop: '4px' }}>
+                          {property.constraints.map((constraint, index) => (
+                            <li key={index} style={{ fontSize: '14px', color: '#666' }}>{constraint}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                      <strong>描述:</strong> {property.description || '无'}
+                    </div>
+                  </div>
                   <div className="card-actions">
                     <button className="edit" onClick={() => handleEditProperty(property)}>编辑</button>
                     <button className="delete" onClick={() => handleDeleteProperty(property.id)}>删除</button>
@@ -1278,7 +1321,7 @@ const ModelDetail = () => {
       {/* 新建/编辑属性模态框 */}
       {isPropertyModalOpen && (
         <div className="modal">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
             <h2>{editingProperty ? '编辑属性' : '新建属性'}</h2>
             <div className="form-group">
               <label>名称</label>
@@ -1302,27 +1345,103 @@ const ModelDetail = () => {
                 <option value="array">数组</option>
               </select>
             </div>
-            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="form-group">
+              <label>属性特性</label>
+              <div className="checkbox-group">
+                <label htmlFor="required">
+                  <input
+                    type="checkbox"
+                    id="required"
+                    checked={newProperty.required}
+                    onChange={(e) => setNewProperty({ ...newProperty, required: e.target.checked })}
+                  />
+                  必填
+                </label>
+                <label htmlFor="isPrimaryKey">
+                  <input
+                    type="checkbox"
+                    id="isPrimaryKey"
+                    checked={newProperty.isPrimaryKey}
+                    onChange={(e) => setNewProperty({ ...newProperty, isPrimaryKey: e.target.checked })}
+                  />
+                  主键
+                </label>
+                <label htmlFor="isForeignKey">
+                  <input
+                    type="checkbox"
+                    id="isForeignKey"
+                    checked={newProperty.isForeignKey}
+                    onChange={(e) => setNewProperty({ ...newProperty, isForeignKey: e.target.checked })}
+                  />
+                  外键
+                </label>
+              </div>
+            </div>
+            <div className="form-group">
+              <label>默认值</label>
               <input
-                type="checkbox"
-                id="required"
-                checked={newProperty.required}
-                onChange={(e) => setNewProperty({ ...newProperty, required: e.target.checked })}
+                type="text"
+                value={newProperty.defaultValue || ''}
+                onChange={(e) => setNewProperty({ ...newProperty, defaultValue: e.target.value || null })}
+                placeholder="输入默认值"
               />
-              <label htmlFor="required" style={{ marginBottom: 0 }}>必填</label>
+            </div>
+            <div className="form-group">
+              <label>物理表字段映射</label>
+              <input
+                type="text"
+                value={newProperty.physicalColumn}
+                onChange={(e) => setNewProperty({ ...newProperty, physicalColumn: e.target.value })}
+                placeholder="例如: column_name"
+              />
+            </div>
+            <div className="form-group">
+              <label>敏感级别</label>
+              <select
+                value={newProperty.sensitivityLevel}
+                onChange={(e) => setNewProperty({ ...newProperty, sensitivityLevel: e.target.value })}
+              >
+                <option value="public">公开</option>
+                <option value="internal">内部</option>
+                <option value="private">私有</option>
+                <option value="secret">机密</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>数据脱敏规则</label>
+              <select
+                value={newProperty.maskRule || ''}
+                onChange={(e) => setNewProperty({ ...newProperty, maskRule: e.target.value || null })}
+              >
+                <option value="">无</option>
+                <option value="phone_middle_4">手机号中间4位*</option>
+                <option value="id_card_last_4">身份证号后4位*</option>
+                <option value="name_first_1">姓名首字*</option>
+                <option value="email_mask">邮箱</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>约束规则</label>
+              <textarea
+                value={newProperty.constraints.join('\n')}
+                onChange={(e) => setNewProperty({ ...newProperty, constraints: e.target.value.split('\n').filter(Boolean) })}
+                placeholder="每行一个约束规则，例如：NOT NULL, UNIQUE, MIN(0)"
+                rows={4}
+              ></textarea>
             </div>
             <div className="form-group">
               <label>描述</label>
               <textarea
                 value={newProperty.description}
                 onChange={(e) => setNewProperty({ ...newProperty, description: e.target.value })}
+                rows={3}
               ></textarea>
             </div>
             <div className="form-actions">
               <button className="cancel" onClick={() => {
                 setIsPropertyModalOpen(false)
                 setEditingProperty(null)
-                setNewProperty({ name: '', type: 'string', required: false, description: '' })
+                setNewProperty({ name: '', type: 'string', required: false, description: '', isPrimaryKey: false, isForeignKey: false, defaultValue: null, constraints: [], sensitivityLevel: 'public', maskRule: null, physicalColumn: '' })
               }}>取消</button>
               <button className="submit" onClick={handleSaveProperty}>{editingProperty ? '更新' : '确定'}</button>
             </div>
