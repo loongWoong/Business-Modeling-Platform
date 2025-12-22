@@ -29,6 +29,12 @@ const ModelDetail = () => {
     description: ''
   })
   
+  // 共享属性引用相关状态
+  const [isSharedAttrModalOpen, setIsSharedAttrModalOpen] = useState(false)
+  const [sharedAttributes, setSharedAttributes] = useState([])
+  const [selectedSharedAttrs, setSelectedSharedAttrs] = useState([])
+  const [sharedAttrSearchTerm, setSharedAttrSearchTerm] = useState('')
+  
   // 模型列表状态，用于模糊匹配
   const [allModels, setAllModels] = useState([])
   const [targetModelSearchTerm, setTargetModelSearchTerm] = useState('')
@@ -118,25 +124,43 @@ const ModelDetail = () => {
             .then(response => response.json())
             .then(domainData => {
               const domain = domainData.domains.find(d => d.id === foundModel.domainId)
-              setCurrentDomain(domain)
-              setModel({
+              const updatedModel = {
                 id: parseInt(modelId),
                 name: foundModel.name,
                 description: foundModel.description,
                 domainId: foundModel.domainId,
                 domainName: domain?.name || `域ID: ${foundModel.domainId}`
-              })
+              }
+              setCurrentDomain(domain)
+              setModel(updatedModel)
+              
+              // 获取当前业务域的共享属性
+              fetch(`/api/shared-attribute?domainId=${updatedModel.domainId}`)
+                .then(response => response.json())
+                .then(sharedAttrData => {
+                  setSharedAttributes(sharedAttrData)
+                })
+                .catch(error => console.error('Failed to fetch shared attributes:', error))
             })
             .catch(error => {
               console.error('Failed to fetch domains:', error)
               // 即使域数据获取失败，也要设置模型基本信息
-              setModel({
+              const updatedModel = {
                 id: parseInt(modelId),
                 name: foundModel.name,
                 description: foundModel.description,
                 domainId: foundModel.domainId,
                 domainName: `域ID: ${foundModel.domainId}`
-              })
+              }
+              setModel(updatedModel)
+              
+              // 获取当前业务域的共享属性
+              fetch(`/api/shared-attribute?domainId=${updatedModel.domainId}`)
+                .then(response => response.json())
+                .then(sharedAttrData => {
+                  setSharedAttributes(sharedAttrData)
+                })
+                .catch(error => console.error('Failed to fetch shared attributes:', error))
             })
         } else {
           // 模型不存在时的处理
@@ -661,6 +685,235 @@ const ModelDetail = () => {
   const handleSaveIndicator = () => {
     handleCreateIndicator()
   }
+  
+  // 通用导出函数
+  const handleExport = (data, filename) => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+    showNotification('导出成功')
+  }
+  
+  // 通用导入函数
+  const handleImport = (callback, type) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = (e) => {
+      const file = e.target.files[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result)
+            callback(data)
+            showNotification('导入成功')
+          } catch (error) {
+            console.error('Failed to parse import data:', error)
+            showNotification('导入失败，文件格式错误', 'error')
+          }
+        }
+        reader.readAsText(file)
+      }
+    }
+    input.click()
+  }
+  
+  // 属性导出函数
+  const handlePropertyExport = () => {
+    handleExport(properties, `properties_${modelId}.json`)
+  }
+  
+  // 属性导入函数
+  const handlePropertyImport = () => {
+    handleImport((data) => {
+      // 实际项目中应该调用API导入数据
+      data.forEach(prop => {
+        // 确保每个属性都有modelId
+        prop.modelId = parseInt(modelId)
+      })
+      
+      // 批量创建属性
+      const createPromises = data.map(prop => {
+        return fetch('/api/property', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(prop)
+        })
+      })
+      
+      Promise.all(createPromises)
+        .then(() => {
+          // 重新获取属性列表
+          fetch(`/api/property?modelId=${modelId}`)
+            .then(response => response.json())
+            .then(propertyData => {
+              setProperties(propertyData)
+            })
+        })
+        .catch(error => {
+          console.error('Failed to import properties:', error)
+          showNotification('属性导入失败', 'error')
+        })
+    }, 'property')
+  }
+  
+  // 关系导出函数
+  const handleRelationExport = () => {
+    handleExport(relations, `relations_${modelId}.json`)
+  }
+  
+  // 关系导入函数
+  const handleRelationImport = () => {
+    handleImport((data) => {
+      // 实际项目中应该调用API导入数据
+      data.forEach(relation => {
+        // 确保每个关系都有sourceModelId
+        relation.sourceModelId = parseInt(modelId)
+      })
+      
+      // 批量创建关系
+      const createPromises = data.map(relation => {
+        return fetch('/api/relation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(relation)
+        })
+      })
+      
+      Promise.all(createPromises)
+        .then(() => {
+          // 重新获取关系列表
+          fetch(`/api/relation?modelId=${modelId}`)
+            .then(response => response.json())
+            .then(relationData => {
+              setRelations(relationData)
+            })
+        })
+        .catch(error => {
+          console.error('Failed to import relations:', error)
+          showNotification('关系导入失败', 'error')
+        })
+    }, 'relation')
+  }
+  
+  // 数据源导出函数
+  const handleDatasourceExport = () => {
+    handleExport(datasources, `datasources_${modelId}.json`)
+  }
+  
+  // 数据源导入函数
+  const handleDatasourceImport = () => {
+    handleImport((data) => {
+      // 实际项目中应该调用API导入数据
+      setDatasources([...datasources, ...data])
+      showNotification('数据源导入成功')
+    }, 'datasource')
+  }
+  
+  // 语义指标导出函数
+  const handleSemanticExport = () => {
+    handleExport(semanticIndicators, `semantic_indicators_${modelId}.json`)
+  }
+  
+  // 语义指标导入函数
+  const handleSemanticImport = () => {
+    handleImport((data) => {
+      // 实际项目中应该调用API导入数据
+      const createPromises = data.map(indicator => {
+        return fetch('/api/indicator', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(indicator)
+        })
+      })
+      
+      Promise.all(createPromises)
+        .then(() => {
+          // 重新获取语义指标列表
+          fetch('/api/indicator')
+            .then(response => response.json())
+            .then(indicatorData => {
+              setSemanticIndicators(indicatorData)
+            })
+        })
+        .catch(error => {
+          console.error('Failed to import semantic indicators:', error)
+          showNotification('语义指标导入失败', 'error')
+        })
+    }, 'semantic')
+  }
+  
+  // 共享属性引用功能函数
+  const handleOpenSharedAttrModal = () => {
+    setIsSharedAttrModalOpen(true)
+    setSelectedSharedAttrs([])
+    setSharedAttrSearchTerm('')
+  }
+  
+  const handleSharedAttrSearch = (e) => {
+    setSharedAttrSearchTerm(e.target.value)
+  }
+  
+  const handleSelectSharedAttr = (attr) => {
+    setSelectedSharedAttrs(prev => {
+      if (prev.some(a => a.id === attr.id)) {
+        return prev.filter(a => a.id !== attr.id)
+      } else {
+        return [...prev, attr]
+      }
+    })
+  }
+  
+  const handleReferenceSharedAttrs = () => {
+    if (selectedSharedAttrs.length === 0) {
+      showNotification('请选择要引用的共享属性', 'error')
+      return
+    }
+    
+    // 将选择的共享属性转换为模型属性并创建
+    const createPromises = selectedSharedAttrs.map(sharedAttr => {
+      return fetch('/api/property', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: sharedAttr.name,
+          type: sharedAttr.type,
+          required: false,
+          description: sharedAttr.description,
+          modelId: parseInt(modelId)
+        })
+      })
+    })
+    
+    Promise.all(createPromises)
+      .then(() => {
+        // 重新获取属性列表
+        fetch(`/api/property?modelId=${modelId}`)
+          .then(response => response.json())
+          .then(propertyData => {
+            setProperties(propertyData)
+            setIsSharedAttrModalOpen(false)
+            showNotification(`成功引用${selectedSharedAttrs.length}个共享属性`)
+          })
+      })
+      .catch(error => {
+        console.error('Failed to reference shared attributes:', error)
+        showNotification('引用共享属性失败', 'error')
+      })
+  }
 
   return (
     <div className="model-detail">
@@ -752,9 +1005,9 @@ const ModelDetail = () => {
             <div className="header-toolbar">
               <input type="text" placeholder="搜索属性名称..." />
               <button onClick={() => setIsPropertyModalOpen(true)}>新建属性</button>
-              <button onClick={() => console.log('从共享属性引用')}>从共享属性引用</button>
-              <button>导入</button>
-              <button>导出</button>
+              <button onClick={handleOpenSharedAttrModal}>从共享属性引用</button>
+              <button onClick={handlePropertyImport}>导入</button>
+              <button onClick={handlePropertyExport}>导出</button>
             </div>
             <div className="card-list">
               {properties.map(property => (
@@ -779,8 +1032,8 @@ const ModelDetail = () => {
             <div className="header-toolbar">
               <input type="text" placeholder="搜索关系名称..." />
               <button onClick={() => setIsRelationModalOpen(true)}>新建关系</button>
-              <button>导入</button>
-              <button>导出</button>
+              <button onClick={handleRelationImport}>导入</button>
+              <button onClick={handleRelationExport}>导出</button>
             </div>
             <div className="card-list">
               {relations.map(relation => (
@@ -805,8 +1058,8 @@ const ModelDetail = () => {
             <div className="header-toolbar">
               <input type="text" placeholder="搜索数据源名称..." />
               <button onClick={() => setIsDatasourceModalOpen(true)}>新建数据源</button>
-              <button>导入</button>
-              <button>导出</button>
+              <button onClick={handleDatasourceImport}>导入</button>
+              <button onClick={handleDatasourceExport}>导出</button>
             </div>
             <div className="table-container">
               <table className="data-table">
@@ -894,8 +1147,8 @@ const ModelDetail = () => {
             <div className="header-toolbar">
               <input type="text" placeholder="搜索指标名称..." />
               <button onClick={() => setIsIndicatorModalOpen(true)}>新建指标</button>
-              <button>导入</button>
-              <button>导出</button>
+              <button onClick={handleSemanticImport}>导入</button>
+              <button onClick={handleSemanticExport}>导出</button>
             </div>
             <div style={{ display: 'flex', gap: '24px', padding: '20px' }}>
               {/* 左侧可选指标 */}
@@ -1364,6 +1617,73 @@ const ModelDetail = () => {
                 setNewIndicator({ name: '', expression: '', returnType: 'number', description: '' });
               }}>取消</button>
               <button className="submit" onClick={handleSaveIndicator}>确定</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 共享属性引用模态框 */}
+      {isSharedAttrModalOpen && (
+        <div className="modal">
+          <div className="modal-content" style={{ color: '#000000', maxHeight: '80vh', overflowY: 'auto' }}>
+            <h2>从共享属性引用</h2>
+            <div className="form-group">
+              <label>搜索共享属性</label>
+              <input
+                type="text"
+                value={sharedAttrSearchTerm}
+                onChange={handleSharedAttrSearch}
+                placeholder="输入属性名称搜索..."
+                style={{ color: '#000000' }}
+              />
+            </div>
+            <div style={{ margin: '20px 0' }}>
+              <h3>可选共享属性</h3>
+              <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+                {sharedAttributes.filter(attr => 
+                  attr.name.toLowerCase().includes(sharedAttrSearchTerm.toLowerCase())
+                ).map(attr => (
+                  <div 
+                    key={attr.id} 
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid #f0f0f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s',
+                      backgroundColor: selectedSharedAttrs.some(a => a.id === attr.id) ? '#e6f7ff' : 'transparent'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f5ff'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = selectedSharedAttrs.some(a => a.id === attr.id) ? '#e6f7ff' : 'transparent'}
+                    onClick={() => handleSelectSharedAttr(attr)}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{attr.name}</div>
+                      <div style={{ fontSize: '14px', color: '#666' }}>类型: {attr.type}</div>
+                      <div style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>{attr.description}</div>
+                    </div>
+                    <div style={{ marginLeft: '16px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedSharedAttrs.some(a => a.id === attr.id)}
+                        onChange={() => handleSelectSharedAttr(attr)}
+                        style={{ transform: 'scale(1.2)' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="form-actions" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '14px', color: '#666' }}>
+                已选择 {selectedSharedAttrs.length} 个属性
+              </div>
+              <div>
+                <button className="cancel" onClick={() => setIsSharedAttrModalOpen(false)}>取消</button>
+                <button className="submit" onClick={handleReferenceSharedAttrs}>确认引用</button>
+              </div>
             </div>
           </div>
         </div>
