@@ -99,11 +99,21 @@ const DomainWorkbench = () => {
     // 模拟获取关系数据
     // 实际项目中应该调用API获取
     const mockRelations = [
-      { id: 1, name: '包含', sourceModel: '路段信息', targetModel: '收费站', type: 'one-to-many', description: '路段包含多个收费站', enabled: true },
-      { id: 2, name: '属于', sourceModel: '收费站', targetModel: '路段信息', type: 'many-to-one', description: '收费站属于某个路段', enabled: true },
-      { id: 3, name: '使用', sourceModel: '车辆信息', targetModel: '车型', type: 'many-to-one', description: '车辆使用某种车型', enabled: true },
-      { id: 4, name: '生成', sourceModel: '通行记录', targetModel: '账单', type: 'one-to-one', description: '通行记录生成账单', enabled: true },
-      { id: 5, name: '适用于', sourceModel: '收费规则', targetModel: '通行记录', type: 'one-to-many', description: '收费规则适用于通行记录', enabled: true }
+      { id: 1, name: '持有', sourceModel: '车辆', targetModel: '通行介质', type: 'one-to-many', description: '车辆持有多个通行介质', enabled: true },
+      { id: 2, name: '关联', sourceModel: '车辆', targetModel: '交易流水', type: 'one-to-many', description: '车辆关联多个交易流水', enabled: true },
+      { id: 3, name: '管理', sourceModel: '路段业主', targetModel: '收费公路', type: 'one-to-many', description: '路段业主管理多个收费公路', enabled: true },
+      { id: 4, name: '包含', sourceModel: '收费公路', targetModel: '收费站', type: 'one-to-many', description: '收费公路包含多个收费站', enabled: true },
+      { id: 5, name: '包含', sourceModel: '收费公路', targetModel: 'ETC门架', type: 'one-to-many', description: '收费公路包含多个ETC门架', enabled: true },
+      { id: 6, name: '包含', sourceModel: '收费公路', targetModel: '收费单元', type: 'one-to-many', description: '收费公路包含多个收费单元', enabled: true },
+      { id: 7, name: '代收', sourceModel: 'ETC门架', targetModel: '收费单元', type: 'one-to-many', description: 'ETC门架代收多个收费单元', enabled: true },
+      { id: 8, name: '包含', sourceModel: '收费站', targetModel: '车道', type: 'one-to-many', description: '收费站包含多个车道', enabled: true },
+      { id: 9, name: '继承', sourceModel: 'ETC门架', targetModel: '标识点', type: 'one-to-one', description: 'ETC门架继承标识点', enabled: true },
+      { id: 10, name: '继承', sourceModel: '车道', targetModel: '标识点', type: 'one-to-one', description: '车道继承标识点', enabled: true },
+      { id: 11, name: '生成', sourceModel: '标识点', targetModel: '交易流水', type: 'one-to-many', description: '标识点生成多个交易流水', enabled: true },
+      { id: 12, name: '汇聚为', sourceModel: '交易流水', targetModel: '车辆通行路径', type: 'many-to-one', description: '多个交易流水汇聚为一个车辆通行路径', enabled: true },
+      { id: 13, name: '拟合为', sourceModel: '车辆通行路径', targetModel: '通行拟合路径', type: 'one-to-one', description: '车辆通行路径拟合为一个通行拟合路径', enabled: true },
+      { id: 14, name: '拆分为', sourceModel: '通行拟合路径', targetModel: '拆分明细', type: 'one-to-many', description: '通行拟合路径拆分为多个拆分明细', enabled: true },
+      { id: 15, name: '关联', sourceModel: '收费单元', targetModel: '拆分明细', type: 'one-to-one', description: '收费单元关联一个拆分明细', enabled: true }
     ]
     setRelations(mockRelations)
     
@@ -1005,16 +1015,17 @@ const DomainWorkbench = () => {
                 onChange={(e) => setNewRelation({ ...newRelation, sourceModel: e.target.value })}
               >
                 <option value="">选择源模型</option>
-                <option value="路段信息">路段信息</option>
+                <option value="车辆">车辆</option>
+                <option value="路段业主">路段业主</option>
+                <option value="收费公路">收费公路</option>
                 <option value="收费站">收费站</option>
-                <option value="车辆信息">车辆信息</option>
-                <option value="车型">车型</option>
-                <option value="通行记录">通行记录</option>
-                <option value="账单">账单</option>
-                <option value="收费规则">收费规则</option>
-                <option value="客户信息">客户信息</option>
-                <option value="支付记录">支付记录</option>
-                <option value="支付方式">支付方式</option>
+                <option value="ETC门架">ETC门架</option>
+                <option value="收费单元">收费单元</option>
+                <option value="车道">车道</option>
+                <option value="标识点">标识点</option>
+                <option value="交易流水">交易流水</option>
+                <option value="车辆通行路径">车辆通行路径</option>
+                <option value="通行拟合路径">通行拟合路径</option>
               </select>
             </div>
             <div className="form-group">
@@ -1024,16 +1035,17 @@ const DomainWorkbench = () => {
                 onChange={(e) => setNewRelation({ ...newRelation, targetModel: e.target.value })}
               >
                 <option value="">选择目标模型</option>
-                <option value="路段信息">路段信息</option>
+                <option value="通行介质">通行介质</option>
+                <option value="交易流水">交易流水</option>
+                <option value="收费公路">收费公路</option>
                 <option value="收费站">收费站</option>
-                <option value="车辆信息">车辆信息</option>
-                <option value="车型">车型</option>
-                <option value="通行记录">通行记录</option>
-                <option value="账单">账单</option>
-                <option value="收费规则">收费规则</option>
-                <option value="客户信息">客户信息</option>
-                <option value="支付记录">支付记录</option>
-                <option value="支付方式">支付方式</option>
+                <option value="ETC门架">ETC门架</option>
+                <option value="收费单元">收费单元</option>
+                <option value="车道">车道</option>
+                <option value="标识点">标识点</option>
+                <option value="车辆通行路径">车辆通行路径</option>
+                <option value="通行拟合路径">通行拟合路径</option>
+                <option value="拆分明细">拆分明细</option>
               </select>
             </div>
             <div className="form-group">

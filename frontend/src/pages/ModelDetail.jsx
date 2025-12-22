@@ -9,6 +9,29 @@ const ModelDetail = () => {
   const [relations, setRelations] = useState([])
   const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false)
   const [newProperty, setNewProperty] = useState({ name: '', type: 'string', required: false, description: '' })
+  
+  // 关系相关状态
+  const [isRelationModalOpen, setIsRelationModalOpen] = useState(false)
+  const [editingRelation, setEditingRelation] = useState(null)
+  const [newRelation, setNewRelation] = useState({
+    name: '',
+    sourceModel: '',
+    targetModel: '',
+    type: 'one-to-many',
+    description: ''
+  })
+  
+  // 模型列表状态，用于模糊匹配
+  const [allModels, setAllModels] = useState([])
+  const [targetModelSearchTerm, setTargetModelSearchTerm] = useState('')
+  const [targetModelSuggestions, setTargetModelSuggestions] = useState([])
+  const [showTargetSuggestions, setShowTargetSuggestions] = useState(false)
+  
+  // 关系类型列表状态，用于模糊匹配关系名称
+  const [relationTypes, setRelationTypes] = useState([])
+  const [relationNameSearchTerm, setRelationNameSearchTerm] = useState('')
+  const [relationNameSuggestions, setRelationNameSuggestions] = useState([])
+  const [showRelationNameSuggestions, setShowRelationNameSuggestions] = useState(false)
   const [currentDomain, setCurrentDomain] = useState(null)
   const [modelName, setModelName] = useState('')
   
@@ -60,6 +83,9 @@ const ModelDetail = () => {
       .then(data => {
         // 处理API返回的数据格式，兼容数组或包含models和edges的对象
         const models = Array.isArray(data) ? data : data.models || []
+        // 保存所有模型，用于目标模型的模糊匹配
+        setAllModels(models)
+        
         const foundModel = models.find(m => m.id === parseInt(modelId))
         if (foundModel) {
           setModelName(foundModel.name)
@@ -127,6 +153,16 @@ const ModelDetail = () => {
       })
       .catch(error => console.error('Failed to fetch relations:', error))
     
+    // 获取所有关系类型，用于关系名称的模糊匹配
+    fetch('/api/relation')
+      .then(response => response.json())
+      .then(allRelationData => {
+        // 提取所有关系名称，去重
+        const relationNames = [...new Set(allRelationData.map(r => r.name))]
+        setRelationTypes(relationNames)
+      })
+      .catch(error => console.error('Failed to fetch relation types:', error))
+    
     // 模拟获取数据源数据
     const mockDatasources = [
       { id: 1, name: 'MySQL数据库', type: 'mysql', url: 'jdbc:mysql://localhost:3306/expressway', tableName: 't_vehicle', status: 'active', description: '车辆信息表' },
@@ -186,6 +222,134 @@ const ModelDetail = () => {
         setProperties(properties.filter(property => property.id !== id))
       })
       .catch(error => console.error('Failed to delete property:', error))
+  }
+  
+  // 关系处理函数
+  const handleCreateRelation = () => {
+    fetch('/api/relation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        ...newRelation,
+        sourceModelId: parseInt(modelId)
+      })
+    })
+      .then(response => response.json())
+      .then(relation => {
+        setRelations([...relations, relation])
+        setIsRelationModalOpen(false)
+        setNewRelation({ name: '', sourceModel: '', targetModel: '', type: 'one-to-many', description: '' })
+      })
+      .catch(error => console.error('Failed to create relation:', error))
+  }
+  
+  const handleEditRelation = (relation) => {
+    setEditingRelation(relation)
+    setNewRelation(relation)
+    setIsRelationModalOpen(true)
+  }
+  
+  const handleUpdateRelation = () => {
+    fetch(`/api/relation/${editingRelation.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newRelation)
+    })
+      .then(response => response.json())
+      .then(updatedRelation => {
+        setRelations(relations.map(relation => 
+          relation.id === updatedRelation.id ? updatedRelation : relation
+        ))
+        setIsRelationModalOpen(false)
+        setEditingRelation(null)
+        setNewRelation({ name: '', sourceModel: '', targetModel: '', type: 'one-to-many', description: '' })
+      })
+      .catch(error => console.error('Failed to update relation:', error))
+  }
+  
+  const handleDeleteRelation = (id) => {
+    fetch(`/api/relation/${id}`, { method: 'DELETE' })
+      .then(() => {
+        setRelations(relations.filter(relation => relation.id !== id))
+      })
+      .catch(error => console.error('Failed to delete relation:', error))
+  }
+  
+  const handleSaveRelation = () => {
+    if (editingRelation) {
+      handleUpdateRelation()
+    } else {
+      handleCreateRelation()
+    }
+  }
+  
+  // 目标模型搜索处理函数
+  const handleTargetModelChange = (e) => {
+    const term = e.target.value
+    setTargetModelSearchTerm(term)
+    setNewRelation({ ...newRelation, targetModel: term })
+    
+    if (term.trim()) {
+      // 根据输入的关键词模糊匹配模型名称
+      const filteredModels = allModels.filter(model => 
+        model.name.toLowerCase().includes(term.toLowerCase())
+      )
+      setTargetModelSuggestions(filteredModels)
+      setShowTargetSuggestions(true)
+    } else {
+      setTargetModelSuggestions([])
+      setShowTargetSuggestions(false)
+    }
+  }
+  
+  // 选择目标模型
+  const handleSelectTargetModel = (model) => {
+    setNewRelation({ ...newRelation, targetModel: model.name })
+    setTargetModelSearchTerm(model.name)
+    setShowTargetSuggestions(false)
+  }
+  
+  // 关系名称搜索处理函数
+  const handleRelationNameChange = (e) => {
+    const term = e.target.value
+    setRelationNameSearchTerm(term)
+    setNewRelation({ ...newRelation, name: term })
+    
+    if (term.trim()) {
+      // 根据输入的关键词模糊匹配关系名称
+      const filteredRelations = relationTypes.filter(relationName => 
+        relationName.toLowerCase().includes(term.toLowerCase())
+      )
+      setRelationNameSuggestions(filteredRelations)
+      setShowRelationNameSuggestions(true)
+    } else {
+      setRelationNameSuggestions([])
+      setShowRelationNameSuggestions(false)
+    }
+  }
+  
+  // 选择关系名称
+  const handleSelectRelationName = (relationName) => {
+    setNewRelation({ ...newRelation, name: relationName })
+    setRelationNameSearchTerm(relationName)
+    setShowRelationNameSuggestions(false)
+  }
+  
+  // 关闭关系模态框时重置状态
+  const handleCloseRelationModal = () => {
+    setIsRelationModalOpen(false)
+    setEditingRelation(null)
+    setNewRelation({ name: '', sourceModel: '', targetModel: '', type: 'one-to-many', description: '' })
+    setTargetModelSearchTerm('')
+    setTargetModelSuggestions([])
+    setShowTargetSuggestions(false)
+    setRelationNameSearchTerm('')
+    setRelationNameSuggestions([])
+    setShowRelationNameSuggestions(false)
   }
   
   // 数据源处理函数
@@ -410,7 +574,7 @@ const ModelDetail = () => {
           <>
             <div className="header-toolbar">
               <input type="text" placeholder="搜索关系名称..." />
-              <button onClick={() => console.log('新建关系')}>新建关系</button>
+              <button onClick={() => setIsRelationModalOpen(true)}>新建关系</button>
               <button>导入</button>
               <button>导出</button>
             </div>
@@ -422,8 +586,8 @@ const ModelDetail = () => {
                   <p>关系类型: {relation.type}</p>
                   <p>描述: {relation.description}</p>
                   <div className="card-actions">
-                    <button className="edit" onClick={() => console.log('编辑关系', relation.id)}>编辑</button>
-                    <button className="delete" onClick={() => console.log('删除关系', relation.id)}>删除</button>
+                    <button className="edit" onClick={() => handleEditRelation(relation)}>编辑</button>
+                    <button className="delete" onClick={() => handleDeleteRelation(relation.id)}>删除</button>
                   </div>
                 </div>
               ))}
@@ -696,6 +860,159 @@ const ModelDetail = () => {
             <div className="form-actions">
               <button className="cancel" onClick={() => setIsPropertyModalOpen(false)}>取消</button>
               <button className="submit" onClick={handleCreateProperty}>确定</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 关系模态框 */}
+      {isRelationModalOpen && (
+        <div className="modal">
+          <div className="modal-content" style={{ color: '#000000' }}>
+            <h2>{editingRelation ? '编辑关系' : '新建关系'}</h2>
+            <div className="form-group">
+              <label>名称</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={relationNameSearchTerm}
+                  onChange={handleRelationNameChange}
+                  onFocus={() => {
+                    if (relationNameSearchTerm.trim()) {
+                      const filteredRelations = relationTypes.filter(relationName => 
+                        relationName.toLowerCase().includes(relationNameSearchTerm.toLowerCase())
+                      )
+                      setRelationNameSuggestions(filteredRelations)
+                      setShowRelationNameSuggestions(true)
+                    }
+                  }}
+                  style={{ color: '#000000' }}
+                />
+                {showRelationNameSuggestions && relationNameSuggestions.length > 0 && (
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 'var(--radius-md)',
+                      boxShadow: 'var(--shadow-md)',
+                      zIndex: 10,
+                      maxHeight: '200px',
+                      overflowY: 'auto'
+                    }}
+                  >
+                    {relationNameSuggestions.map((relationName, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          padding: '10px 16px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0',
+                          color: '#000000',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#ffffff'}
+                        onClick={() => handleSelectRelationName(relationName)}
+                      >
+                        {relationName}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="form-group">
+              <label>源模型</label>
+              <input
+                type="text"
+                value={modelName}
+                disabled
+                style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed', color: '#000000' }}
+              />
+            </div>
+            <div className="form-group">
+              <label>目标模型</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={targetModelSearchTerm}
+                  onChange={handleTargetModelChange}
+                  onFocus={() => {
+                    if (targetModelSearchTerm.trim()) {
+                      const filteredModels = allModels.filter(model => 
+                        model.name.toLowerCase().includes(targetModelSearchTerm.toLowerCase())
+                      )
+                      setTargetModelSuggestions(filteredModels)
+                      setShowTargetSuggestions(true)
+                    }
+                  }}
+                  style={{ color: '#000000' }}
+                />
+                {showTargetSuggestions && targetModelSuggestions.length > 0 && (
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 'var(--radius-md)',
+                      boxShadow: 'var(--shadow-md)',
+                      zIndex: 10,
+                      maxHeight: '200px',
+                      overflowY: 'auto'
+                    }}
+                  >
+                    {targetModelSuggestions.map(model => (
+                      <div
+                        key={model.id}
+                        style={{
+                          padding: '10px 16px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0',
+                          color: '#000000',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#ffffff'}
+                        onClick={() => handleSelectTargetModel(model)}
+                      >
+                        {model.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="form-group">
+              <label>关系类型</label>
+              <select
+                value={newRelation.type}
+                onChange={(e) => setNewRelation({ ...newRelation, type: e.target.value })}
+                style={{ color: '#000000' }}
+              >
+                <option value="one-to-one" style={{ color: '#000000' }}>一对一</option>
+                <option value="one-to-many" style={{ color: '#000000' }}>一对多</option>
+                <option value="many-to-one" style={{ color: '#000000' }}>多对一</option>
+                <option value="many-to-many" style={{ color: '#000000' }}>多对多</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>描述</label>
+              <textarea
+                value={newRelation.description}
+                onChange={(e) => setNewRelation({ ...newRelation, description: e.target.value })}
+                style={{ color: '#000000' }}
+              ></textarea>
+            </div>
+            <div className="form-actions">
+              <button className="cancel" onClick={handleCloseRelationModal}>取消</button>
+              <button className="submit" onClick={handleSaveRelation}>{editingRelation ? '更新' : '确定'}</button>
             </div>
           </div>
         </div>
