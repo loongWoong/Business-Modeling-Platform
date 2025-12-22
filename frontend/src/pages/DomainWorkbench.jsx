@@ -36,8 +36,8 @@ const DomainWorkbench = () => {
   const [editingRelation, setEditingRelation] = useState(null)
   const [newRelation, setNewRelation] = useState({
     name: '',
-    sourceModel: '',
-    targetModel: '',
+    sourceModelId: '',
+    targetModelId: '',
     type: 'one-to-many',
     description: '',
     enabled: true
@@ -645,7 +645,16 @@ const DomainWorkbench = () => {
   
   const handleEditRelation = (relation) => {
     setEditingRelation(relation)
-    setNewRelation(relation)
+    // 将关系对象转换为使用modelId的格式
+    setNewRelation({
+      id: relation.id,
+      name: relation.name,
+      sourceModelId: relation.sourceModelId || relation.sourceModel,
+      targetModelId: relation.targetModelId || relation.targetModel,
+      type: relation.type,
+      description: relation.description,
+      enabled: relation.enabled
+    })
     setIsRelationModalOpen(true)
   }
   
@@ -1170,8 +1179,8 @@ const DomainWorkbench = () => {
                 setEditingRelation(null)
                 setNewRelation({
                   name: '',
-                  sourceModel: '',
-                  targetModel: '',
+                  sourceModelId: '',
+                  targetModelId: '',
                   type: 'one-to-many',
                   description: '',
                   enabled: true
@@ -1508,24 +1517,24 @@ const DomainWorkbench = () => {
             <div className="form-group">
               <label>源模型</label>
               <select
-                value={newRelation.sourceModel}
-                onChange={(e) => setNewRelation({ ...newRelation, sourceModel: e.target.value })}
+                value={newRelation.sourceModelId}
+                onChange={(e) => setNewRelation({ ...newRelation, sourceModelId: e.target.value })}
               >
                 <option value="">选择源模型</option>
                 {models.map(model => (
-                  <option key={model.id} value={model.name}>{model.name}</option>
+                  <option key={model.id} value={model.id}>{model.name}</option>
                 ))}
               </select>
             </div>
             <div className="form-group">
               <label>目标模型</label>
               <select
-                value={newRelation.targetModel}
-                onChange={(e) => setNewRelation({ ...newRelation, targetModel: e.target.value })}
+                value={newRelation.targetModelId}
+                onChange={(e) => setNewRelation({ ...newRelation, targetModelId: e.target.value })}
               >
                 <option value="">选择目标模型</option>
                 {models.map(model => (
-                  <option key={model.id} value={model.name}>{model.name}</option>
+                  <option key={model.id} value={model.id}>{model.name}</option>
                 ))}
               </select>
             </div>
