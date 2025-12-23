@@ -20,7 +20,10 @@ const DataManager = ({
       id: dataRecords.length + 1
     };
     
-    fetch('/api/data', {
+    // 获取modelId，从当前URL路径中提取
+    const modelId = window.location.pathname.split('/').pop();
+    
+    fetch(`/api/data?modelId=${modelId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dataWithId)
@@ -95,6 +98,35 @@ const DataManager = ({
     );
   };
 
+  // 添加调试信息
+  console.log('DataManager props:', {
+    properties: properties,
+    dataRecords: dataRecords,
+    propertiesLength: properties.length,
+    dataRecordsLength: dataRecords.length
+  });
+
+  // 调试properties和dataRecords的结构
+  if (properties.length > 0) {
+    console.log('Properties:', properties);
+    console.log('First property structure:', properties[0]);
+  }
+  if (dataRecords.length > 0) {
+    console.log('Data records:', dataRecords);
+    console.log('First data record structure:', dataRecords[0]);
+    // 检查每个数据记录是否包含每个属性的physicalColumn
+    if (properties.length > 0) {
+      properties.forEach((prop, index) => {
+        const phyCol = prop.physicalColumn;
+        const hasCol = phyCol in dataRecords[0];
+        const value = dataRecords[0][phyCol];
+        console.log(`Property ${index + 1} (${prop.name}): physicalColumn='${phyCol}', hasCol=${hasCol}, value=${value}`);
+      });
+    }
+  } else {
+    console.log('No data records found');
+  }
+
   return (
     <div className="data-manager">
       <div className="header-toolbar">
@@ -131,19 +163,27 @@ const DataManager = ({
             </tr>
           </thead>
           <tbody>
-            {dataRecords.map(record => (
-              <tr key={record.id}>
-                {properties.map(prop => (
-                  <td key={`${record.id}-${prop.id}`}>
-                    {record[prop.name] !== undefined ? record[prop.name].toString() : '-'}
-                  </td>
-                ))}
-                <td>
-                  <button className="edit" onClick={() => handleEditData(record)}>编辑</button>
-                  <button className="delete" onClick={() => handleDeleteData(record.id)}>删除</button>
+            {dataRecords.length === 0 ? (
+              <tr>
+                <td colSpan={properties.length + 1} style={{ textAlign: 'center', padding: '20px' }}>
+                  暂无数据
                 </td>
               </tr>
-            ))}
+            ) : (
+              dataRecords.map(record => (
+                <tr key={record.id}>
+                  {properties.map(prop => (
+                    <td key={`${record.id}-${prop.id}`}>
+                      {record[prop.physicalColumn] !== undefined ? record[prop.physicalColumn].toString() : '-'}
+                    </td>
+                  ))}
+                  <td>
+                    <button className="edit" onClick={() => handleEditData(record)}>编辑</button>
+                    <button className="delete" onClick={() => handleDeleteData(record.id)}>删除</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

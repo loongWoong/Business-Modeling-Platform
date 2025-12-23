@@ -409,7 +409,10 @@ const ModelDetail = () => {
     fetch(`/api/property?modelId=${modelId}`)
       .then(response => response.json())
       .then(propertyData => {
-        setProperties(propertyData);
+        // 确保返回的是数组
+        const propsArray = Array.isArray(propertyData) ? propertyData : [];
+        console.log('Fetched properties:', propsArray);
+        setProperties(propsArray);
       })
       .catch(error => console.error('Failed to fetch properties:', error));
     
@@ -417,7 +420,9 @@ const ModelDetail = () => {
     fetch(`/api/relation?modelId=${modelId}`)
       .then(response => response.json())
       .then(relationData => {
-        setRelations(relationData);
+        // 确保返回的是数组
+        const relationsArray = Array.isArray(relationData) ? relationData : [];
+        setRelations(relationsArray);
       })
       .catch(error => console.error('Failed to fetch relations:', error));
     
@@ -425,8 +430,10 @@ const ModelDetail = () => {
     fetch('/api/relation')
       .then(response => response.json())
       .then(allRelationData => {
+        // 确保返回的是数组
+        const relationsArray = Array.isArray(allRelationData) ? allRelationData : [];
         // 提取所有关系名称，去重
-        const relationNames = [...new Set(allRelationData.map(r => r.name))];
+        const relationNames = [...new Set(relationsArray.map(r => r.name))];
         setRelationTypes(relationNames);
       })
       .catch(error => console.error('Failed to fetch relation types:', error));
@@ -454,7 +461,9 @@ const ModelDetail = () => {
     fetch(`/api/model/${modelId}/indicator`)
       .then(response => response.json())
       .then(indicatorData => {
-        setBoundIndicators(indicatorData);
+        // 确保返回的是数组
+        const indicatorsArray = Array.isArray(indicatorData) ? indicatorData : [];
+        setBoundIndicators(indicatorsArray);
       })
       .catch(error => console.error('Failed to fetch bound indicators:', error));
     
@@ -462,21 +471,41 @@ const ModelDetail = () => {
     fetch('/api/indicator')
       .then(response => response.json())
       .then(indicatorData => {
-        setSemanticIndicators(indicatorData);
+        // 确保返回的是数组
+        const indicatorsArray = Array.isArray(indicatorData) ? indicatorData : [];
+        setSemanticIndicators(indicatorsArray);
       })
       .catch(error => console.error('Failed to fetch indicators:', error));
     
     // 从后端API获取数据记录
+    console.log(`Fetching data records for modelId: ${modelId}`);
     fetch(`/api/data?modelId=${modelId}`)
-      .then(response => response.json())
+      .then(response => {
+        console.log('Data response status:', response.status);
+        return response.json();
+      })
       .then(data => {
-        setDataRecords(data);
+        // 确保返回的是数组
+        const dataArray = Array.isArray(data) ? data : [];
+        console.log('Fetched data records:', dataArray);
+        setDataRecords(dataArray);
       })
       .catch(error => {
         console.error('Failed to fetch data records:', error);
         // 获取失败时使用空数组
         setDataRecords([]);
       });
+    
+    // 调试properties获取
+    console.log(`Fetching properties for modelId: ${modelId}`);
+    fetch(`/api/property?modelId=${modelId}`)
+      .then(response => response.json())
+      .then(propertyData => {
+        // 确保返回的是数组
+        const propsArray = Array.isArray(propertyData) ? propertyData : [];
+        console.log('Fetched properties:', propsArray);
+      })
+      .catch(error => console.error('Failed to fetch properties:', error));
   }, [modelId]);
 
   return (
@@ -898,7 +927,7 @@ const ModelDetail = () => {
               id: dataRecords.length + 1
             };
             
-            fetch('/api/data', {
+            fetch(`/api/data?modelId=${modelId}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(dataWithId)

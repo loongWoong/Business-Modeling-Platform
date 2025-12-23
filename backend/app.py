@@ -770,12 +770,16 @@ def get_data_records():
         1: [  # 路段业主
             {"id": 1, "owner_id": "OWNER001", "owner_name": "京沪高速公路有限公司", "contact_info": "010-12345678"},
             {"id": 2, "owner_id": "OWNER002", "owner_name": "沪宁高速公路管理公司", "contact_info": "021-87654321"},
-            {"id": 3, "owner_id": "OWNER003", "owner_name": "广深高速公路股份公司", "contact_info": "020-11223344"}
+            {"id": 3, "owner_id": "OWNER003", "owner_name": "广深高速公路股份公司", "contact_info": "020-11223344"},
+            {"id": 4, "owner_id": "OWNER004", "owner_name": "京港澳高速公路有限公司", "contact_info": "010-23456789"},
+            {"id": 5, "owner_id": "OWNER005", "owner_name": "沪昆高速公路管理公司", "contact_info": "021-34567890"}
         ],
         2: [  # 收费公路
             {"id": 1, "road_id": "ROAD001", "road_name": "京沪高速", "owner_id": "OWNER001", "road_level": "高速", "start_mileage": 0, "end_mileage": 1200},
             {"id": 2, "road_id": "ROAD002", "road_name": "沪宁高速", "owner_id": "OWNER002", "road_level": "高速", "start_mileage": 0, "end_mileage": 274},
-            {"id": 3, "road_id": "ROAD003", "road_name": "广深高速", "owner_id": "OWNER003", "road_level": "高速", "start_mileage": 0, "end_mileage": 122.8}
+            {"id": 3, "road_id": "ROAD003", "road_name": "广深高速", "owner_id": "OWNER003", "road_level": "高速", "start_mileage": 0, "end_mileage": 122.8},
+            {"id": 4, "road_id": "ROAD004", "road_name": "京港澳高速", "owner_id": "OWNER004", "road_level": "高速", "start_mileage": 0, "end_mileage": 2285},
+            {"id": 5, "road_id": "ROAD005", "road_name": "沪昆高速", "owner_id": "OWNER005", "road_level": "高速", "start_mileage": 0, "end_mileage": 2730}
         ],
         3: [  # 收费站
             {"id": 1, "station_id": "STATION001", "station_name": "北京收费站", "road_id": "ROAD001", "station_type": "主线站"},
@@ -783,69 +787,119 @@ def get_data_records():
             {"id": 3, "station_id": "STATION003", "station_name": "南京收费站", "road_id": "ROAD002", "station_type": "主线站"},
             {"id": 4, "station_id": "STATION004", "station_name": "天津收费站", "road_id": "ROAD001", "station_type": "匝道站"},
             {"id": 5, "station_id": "STATION005", "station_name": "苏州收费站", "road_id": "ROAD002", "station_type": "主线站"},
-            {"id": 6, "station_id": "STATION006", "station_name": "无锡收费站", "road_id": "ROAD002", "station_type": "匝道站"}
+            {"id": 6, "station_id": "STATION006", "station_name": "无锡收费站", "road_id": "ROAD002", "station_type": "匝道站"},
+            {"id": 7, "station_id": "STATION007", "station_name": "广州收费站", "road_id": "ROAD003", "station_type": "主线站"},
+            {"id": 8, "station_id": "STATION008", "station_name": "深圳收费站", "road_id": "ROAD003", "station_type": "主线站"}
         ],
         4: [  # ETC门架
             {"id": 1, "gantry_id": "GANTRY001", "gantry_name": "京沪高速K100门架", "road_id": "ROAD001", "gantry_location": "K100+500", "gantry_status": "正常"},
             {"id": 2, "gantry_id": "GANTRY002", "gantry_name": "京沪高速K200门架", "road_id": "ROAD001", "gantry_location": "K200+300", "gantry_status": "正常"},
-            {"id": 3, "gantry_id": "GANTRY003", "gantry_name": "沪宁高速K50门架", "road_id": "ROAD002", "gantry_location": "K50+200", "gantry_status": "正常"}
+            {"id": 3, "gantry_id": "GANTRY003", "gantry_name": "沪宁高速K50门架", "road_id": "ROAD002", "gantry_location": "K50+200", "gantry_status": "正常"},
+            {"id": 4, "gantry_id": "GANTRY004", "gantry_name": "广深高速K30门架", "road_id": "ROAD003", "gantry_location": "K30+100", "gantry_status": "正常"},
+            {"id": 5, "gantry_id": "GANTRY005", "gantry_name": "京港澳高速K150门架", "road_id": "ROAD004", "gantry_location": "K150+400", "gantry_status": "正常"}
         ],
         5: [  # 收费单元
             {"id": 1, "toll_unit_id": "UNIT001", "toll_unit_name": "京沪高速收费单元1", "road_id": "ROAD001", "toll_type": "ETC"},
             {"id": 2, "toll_unit_id": "UNIT002", "toll_unit_name": "京沪高速收费单元2", "road_id": "ROAD001", "toll_type": "混合"},
-            {"id": 3, "toll_unit_id": "UNIT003", "toll_unit_name": "沪宁高速收费单元1", "road_id": "ROAD002", "toll_type": "ETC"}
+            {"id": 3, "toll_unit_id": "UNIT003", "toll_unit_name": "沪宁高速收费单元1", "road_id": "ROAD002", "toll_type": "ETC"},
+            {"id": 4, "toll_unit_id": "UNIT004", "toll_unit_name": "广深高速收费单元1", "road_id": "ROAD003", "toll_type": "人工"},
+            {"id": 5, "toll_unit_id": "UNIT005", "toll_unit_name": "京港澳高速收费单元1", "road_id": "ROAD004", "toll_type": "ETC"}
         ],
         6: [  # 车道
             {"id": 1, "lane_id": "LANE001", "lane_number": "1", "station_id": "STATION001", "lane_type": "ETC", "lane_status": "正常"},
             {"id": 2, "lane_id": "LANE002", "lane_number": "2", "station_id": "STATION001", "lane_type": "人工", "lane_status": "正常"},
             {"id": 3, "lane_id": "LANE003", "lane_number": "3", "station_id": "STATION001", "lane_type": "混合", "lane_status": "正常"},
-            {"id": 4, "lane_id": "LANE004", "lane_number": "1", "station_id": "STATION002", "lane_type": "ETC", "lane_status": "正常"}
+            {"id": 4, "lane_id": "LANE004", "lane_number": "1", "station_id": "STATION002", "lane_type": "ETC", "lane_status": "正常"},
+            {"id": 5, "lane_id": "LANE005", "lane_number": "2", "station_id": "STATION002", "lane_type": "人工", "lane_status": "正常"},
+            {"id": 6, "lane_id": "LANE006", "lane_number": "1", "station_id": "STATION003", "lane_type": "ETC", "lane_status": "正常"}
         ],
         7: [  # 标识点
             {"id": 1, "marker_id": "MARKER001", "marker_name": "北京入口标识点", "longitude": 116.4074, "latitude": 39.9042, "marker_type": "入口"},
             {"id": 2, "marker_id": "MARKER002", "marker_name": "京沪高速K100标识点", "longitude": 116.5000, "latitude": 39.9000, "marker_type": "中间点"},
             {"id": 3, "marker_id": "MARKER003", "marker_name": "上海出口标识点", "longitude": 121.4737, "latitude": 31.2304, "marker_type": "出口"},
-            {"id": 4, "marker_id": "MARKER004", "marker_name": "南京入口标识点", "longitude": 118.7969, "latitude": 32.0603, "marker_type": "入口"}
+            {"id": 4, "marker_id": "MARKER004", "marker_name": "南京入口标识点", "longitude": 118.7969, "latitude": 32.0603, "marker_type": "入口"},
+            {"id": 5, "marker_id": "MARKER005", "marker_name": "沪宁高速K50标识点", "longitude": 119.0000, "latitude": 31.5000, "marker_type": "中间点"},
+            {"id": 6, "marker_id": "MARKER006", "marker_name": "广州入口标识点", "longitude": 113.2644, "latitude": 23.1291, "marker_type": "入口"},
+            {"id": 7, "marker_id": "MARKER007", "marker_name": "深圳出口标识点", "longitude": 114.0579, "latitude": 22.5431, "marker_type": "出口"}
         ],
         8: [  # 车辆
-            {"id": 1, "vehicle_id": "VEH001", "license_plate": "京A12345", "vehicle_type": "小型客车", "owner_name": "张三"},
-            {"id": 2, "vehicle_id": "VEH002", "license_plate": "沪B67890", "vehicle_type": "大型货车", "owner_name": "李四"},
-            {"id": 3, "vehicle_id": "VEH003", "license_plate": "粤C54321", "vehicle_type": "小型客车", "owner_name": "王五"},
-            {"id": 4, "vehicle_id": "VEH004", "license_plate": "苏D98765", "vehicle_type": "中型客车", "owner_name": "赵六"}
+            {"id": 1, "vehicle_id": "VEH001", "license_plate": "京A12345", "vehicle_type": "小型客车", "owner_name": "张三", "owner_id_card": "110101199001011234", "vehicle_color": "黑色", "register_date": "2020-01-01", "vehicle_status": "正常"},
+            {"id": 2, "vehicle_id": "VEH002", "license_plate": "沪B67890", "vehicle_type": "大型货车", "owner_name": "李四", "owner_id_card": "310101198505056789", "vehicle_color": "蓝色", "register_date": "2018-05-15", "vehicle_status": "正常"},
+            {"id": 3, "vehicle_id": "VEH003", "license_plate": "粤C54321", "vehicle_type": "小型客车", "owner_name": "王五", "owner_id_card": "440401199510102345", "vehicle_color": "白色", "register_date": "2021-03-20", "vehicle_status": "正常"},
+            {"id": 4, "vehicle_id": "VEH004", "license_plate": "苏D98765", "vehicle_type": "中型客车", "owner_name": "赵六", "owner_id_card": "320401198808087890", "vehicle_color": "银色", "register_date": "2019-07-10", "vehicle_status": "正常"},
+            {"id": 5, "vehicle_id": "VEH005", "license_plate": "粤B36985", "vehicle_type": "大型客车", "owner_name": "孙七", "owner_id_card": "440301199212123456", "vehicle_color": "黄色", "register_date": "2017-11-05", "vehicle_status": "正常"}
         ],
         9: [  # 通行介质
             {"id": 1, "medium_id": "MEDIUM001", "medium_type": "ETC卡", "vehicle_id": "VEH001", "card_number": "6217000010001234567", "balance": 500.0},
             {"id": 2, "medium_id": "MEDIUM002", "medium_type": "ETC卡", "vehicle_id": "VEH002", "card_number": "6217000010002345678", "balance": 1000.0},
             {"id": 3, "medium_id": "MEDIUM003", "medium_type": "ETC卡", "vehicle_id": "VEH003", "card_number": "6217000010003456789", "balance": 300.0},
-            {"id": 4, "medium_id": "MEDIUM004", "medium_type": "ETC卡", "vehicle_id": "VEH004", "card_number": "6217000010004567890", "balance": 800.0}
+            {"id": 4, "medium_id": "MEDIUM004", "medium_type": "ETC卡", "vehicle_id": "VEH004", "card_number": "6217000010004567890", "balance": 800.0},
+            {"id": 5, "medium_id": "MEDIUM005", "medium_type": "ETC卡", "vehicle_id": "VEH005", "card_number": "6217000010005678901", "balance": 1200.0}
         ],
         10: [  # 交易流水
             {"id": 1, "transaction_id": "TXN001", "vehicle_id": "VEH001", "marker_id": "MARKER001", "transaction_time": "2025-12-19 08:00:00", "amount": 50.0, "status": "成功"},
             {"id": 2, "transaction_id": "TXN002", "vehicle_id": "VEH002", "marker_id": "MARKER002", "transaction_time": "2025-12-19 08:15:00", "amount": 120.0, "status": "成功"},
             {"id": 3, "transaction_id": "TXN003", "vehicle_id": "VEH003", "marker_id": "MARKER003", "transaction_time": "2025-12-19 08:30:00", "amount": 80.0, "status": "成功"},
             {"id": 4, "transaction_id": "TXN004", "vehicle_id": "VEH001", "marker_id": "MARKER002", "transaction_time": "2025-12-19 09:00:00", "amount": 60.0, "status": "成功"},
-            {"id": 5, "transaction_id": "TXN005", "vehicle_id": "VEH004", "marker_id": "MARKER004", "transaction_time": "2025-12-19 09:15:00", "amount": 45.0, "status": "成功"}
+            {"id": 5, "transaction_id": "TXN005", "vehicle_id": "VEH004", "marker_id": "MARKER004", "transaction_time": "2025-12-19 09:15:00", "amount": 45.0, "status": "成功"},
+            {"id": 6, "transaction_id": "TXN006", "vehicle_id": "VEH005", "marker_id": "MARKER006", "transaction_time": "2025-12-19 10:00:00", "amount": 150.0, "status": "成功"},
+            {"id": 7, "transaction_id": "TXN007", "vehicle_id": "VEH003", "marker_id": "MARKER007", "transaction_time": "2025-12-19 10:30:00", "amount": 90.0, "status": "成功"}
         ],
         11: [  # 车辆通行路径
             {"id": 1, "path_id": "PATH001", "vehicle_id": "VEH001", "start_marker": "MARKER001", "end_marker": "MARKER003", "path_length": 1200.5, "create_time": "2025-12-19 08:30:00"},
             {"id": 2, "path_id": "PATH002", "vehicle_id": "VEH002", "start_marker": "MARKER002", "end_marker": "MARKER003", "path_length": 800.3, "create_time": "2025-12-19 09:00:00"},
-            {"id": 3, "path_id": "PATH003", "vehicle_id": "VEH003", "start_marker": "MARKER003", "end_marker": "MARKER004", "path_length": 274.2, "create_time": "2025-12-19 09:15:00"}
+            {"id": 3, "path_id": "PATH003", "vehicle_id": "VEH003", "start_marker": "MARKER003", "end_marker": "MARKER004", "path_length": 274.2, "create_time": "2025-12-19 09:15:00"},
+            {"id": 4, "path_id": "PATH004", "vehicle_id": "VEH004", "start_marker": "MARKER004", "end_marker": "MARKER005", "path_length": 50.0, "create_time": "2025-12-19 09:30:00"},
+            {"id": 5, "path_id": "PATH005", "vehicle_id": "VEH005", "start_marker": "MARKER006", "end_marker": "MARKER007", "path_length": 122.8, "create_time": "2025-12-19 10:30:00"}
         ],
         12: [  # 通行拟合路径
             {"id": 1, "fitted_path_id": "FITTED001", "path_id": "PATH001", "fitted_length": 1200.0, "fitted_time": "2025-12-19 08:30:00", "accuracy": 0.95},
             {"id": 2, "fitted_path_id": "FITTED002", "path_id": "PATH002", "fitted_length": 800.0, "fitted_time": "2025-12-19 09:00:00", "accuracy": 0.92},
-            {"id": 3, "fitted_path_id": "FITTED003", "path_id": "PATH003", "fitted_length": 274.0, "fitted_time": "2025-12-19 09:15:00", "accuracy": 0.98}
+            {"id": 3, "fitted_path_id": "FITTED003", "path_id": "PATH003", "fitted_length": 274.0, "fitted_time": "2025-12-19 09:15:00", "accuracy": 0.98},
+            {"id": 4, "fitted_path_id": "FITTED004", "path_id": "PATH004", "fitted_length": 50.0, "fitted_time": "2025-12-19 09:30:00", "accuracy": 0.99},
+            {"id": 5, "fitted_path_id": "FITTED005", "path_id": "PATH005", "fitted_length": 122.8, "fitted_time": "2025-12-19 10:30:00", "accuracy": 0.97}
         ],
         13: [  # 拆分明细
             {"id": 1, "split_id": "SPLIT001", "fitted_path_id": "FITTED001", "toll_unit_id": "UNIT001", "split_amount": 30.0, "split_ratio": 0.6, "split_time": "2025-12-19 08:35:00"},
             {"id": 2, "split_id": "SPLIT002", "fitted_path_id": "FITTED001", "toll_unit_id": "UNIT002", "split_amount": 20.0, "split_ratio": 0.4, "split_time": "2025-12-19 08:35:00"},
             {"id": 3, "split_id": "SPLIT003", "fitted_path_id": "FITTED002", "toll_unit_id": "UNIT001", "split_amount": 80.0, "split_ratio": 0.67, "split_time": "2025-12-19 09:05:00"},
             {"id": 4, "split_id": "SPLIT004", "fitted_path_id": "FITTED002", "toll_unit_id": "UNIT002", "split_amount": 40.0, "split_ratio": 0.33, "split_time": "2025-12-19 09:05:00"},
-            {"id": 5, "split_id": "SPLIT005", "fitted_path_id": "FITTED003", "toll_unit_id": "UNIT003", "split_amount": 274.0, "split_ratio": 1.0, "split_time": "2025-12-19 09:20:00"}
+            {"id": 5, "split_id": "SPLIT005", "fitted_path_id": "FITTED003", "toll_unit_id": "UNIT003", "split_amount": 274.0, "split_ratio": 1.0, "split_time": "2025-12-19 09:20:00"},
+            {"id": 6, "split_id": "SPLIT006", "fitted_path_id": "FITTED004", "toll_unit_id": "UNIT003", "split_amount": 30.0, "split_ratio": 0.6, "split_time": "2025-12-19 09:45:00"},
+            {"id": 7, "split_id": "SPLIT007", "fitted_path_id": "FITTED005", "toll_unit_id": "UNIT004", "split_amount": 150.0, "split_ratio": 1.0, "split_time": "2025-12-19 11:05:00"}
         ]
     }
     
     return jsonify(mock_data_by_model.get(model_id, []))
+
+@app.route('/api/data', methods=['POST'])
+def create_data_record():
+    """创建数据记录"""
+    data = request.get_json()
+    model_id = request.args.get('modelId')
+    if not model_id:
+        return jsonify({"error": "modelId is required"}), 400
+    
+    try:
+        model_id = int(model_id)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid modelId"}), 400
+    
+    # 模拟创建数据记录，实际项目中应该保存到数据库
+    return jsonify(data), 201
+
+@app.route('/api/data/<int:id>', methods=['PUT'])
+def update_data_record(id):
+    """更新数据记录"""
+    data = request.get_json()
+    # 模拟更新数据记录，实际项目中应该更新数据库
+    return jsonify(data)
+
+@app.route('/api/data/<int:id>', methods=['DELETE'])
+def delete_data_record(id):
+    """删除数据记录"""
+    # 模拟删除数据记录，实际项目中应该从数据库删除
+    return jsonify({"message": "Data record deleted"})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

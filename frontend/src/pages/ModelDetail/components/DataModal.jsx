@@ -41,8 +41,8 @@ const DataModal = ({
           >
             <Input
               type={property.type === 'number' ? 'number' : 'text'}
-              value={newData[property.name] || ''}
-              onChange={(e) => setNewData({ ...newData, [property.name]: e.target.value })}
+              value={newData[property.physicalColumn] || ''}
+              onChange={(e) => setNewData({ ...newData, [property.physicalColumn]: e.target.value })}
               placeholder={property.description || property.name}
             />
           </Form.Item>
