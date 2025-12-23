@@ -88,6 +88,16 @@ const ForceDirectedGraph = ({
     .attr('stop-color', d => d.color)
     .attr('stop-opacity', d => d.opacity);
 
+  // 添加画布点击事件，点击空白处收起信息窗
+  g.append('rect')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('fill', 'none')
+    .attr('pointer-events', 'all')
+    .on('click', () => {
+      setIsDrawerVisible(false);
+    });
+
   // 为边添加箭头标记
   defs.append('marker')
     .attr('id', 'arrow')
@@ -211,16 +221,6 @@ const ForceDirectedGraph = ({
     nodeGroup.select('text').style('opacity', 1);
     link.style('opacity', 0.8);
   });
-  
-  // 添加画布点击事件，点击空白处收起信息窗
-  g.append('rect')
-    .attr('width', width)
-    .attr('height', height)
-    .attr('fill', 'none')
-    .attr('pointer-events', 'all')
-    .on('click', () => {
-      setIsDrawerVisible(false);
-    });
 
   // 力导向模拟更新
   simulation.on('tick', () => {
