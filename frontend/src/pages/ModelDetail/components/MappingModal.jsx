@@ -221,14 +221,15 @@ const MappingModal = ({
 
     // 创建力导向模拟
     const simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(d => d.id).distance(150))
-      .force('charge', d3.forceManyBody().strength(-300))
+      .force('link', d3.forceLink(links).id(d => d.id).distance(200))
+      .force('charge', d3.forceManyBody().strength(-500))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('x', d3.forceX().strength(0.2).x(d => {
+      .force('x', d3.forceX().strength(0.5).x(d => {
         if (d.type === 'table') return width * 0.25;  // 数据源表在左侧
         if (d.type === 'model') return width * 0.75;  // 模型表在右侧
         return width / 2;
-      }));
+      }))
+      .force('y', d3.forceY().strength(0.5).y(d => height / 2));  // 固定Y轴位置
 
     // 添加渐变定义
     const defs = svg.append('defs');
@@ -274,8 +275,8 @@ const MappingModal = ({
       .attr('y2', '0%')
       .selectAll('stop')
       .data([
-        { offset: '0%', color: '#f59e0b', opacity: 0.8 },
-        { offset: '100%', color: '#10b981', opacity: 0.8 }
+        { offset: '0%', color: '#f59e0b', opacity: 1 },
+        { offset: '100%', color: '#f59e0b', opacity: 1 }
       ])
       .enter().append('stop')
       .attr('offset', d => d.offset)
@@ -288,8 +289,8 @@ const MappingModal = ({
       .attr('viewBox', '0 -5 10 10')
       .attr('refX', 15)
       .attr('refY', 0)
-      .attr('markerWidth', 6)
-      .attr('markerHeight', 6)
+      .attr('markerWidth', 8)
+      .attr('markerHeight', 8)
       .attr('orient', 'auto')
       .append('path')
       .attr('d', 'M0,-5L10,0L0,5')
@@ -303,7 +304,7 @@ const MappingModal = ({
       .data(links)
       .enter().append('line')
       .attr('class', 'mapping-link')
-      .attr('stroke', 'url(#mappingGradient)')
+      .attr('stroke', '#f59e0b')
       .attr('stroke-width', 2)
       .attr('marker-end', 'url(#mappingArrow)')
       .style('cursor', 'pointer')
@@ -416,12 +417,19 @@ const MappingModal = ({
                 setSelectedProperty(null);
                 setSelectedField(null);
               } else {
-                // 设置当前字段为选中状态
-                setSelectedField(field.id);
-                // 高亮显示选中字段
-                d3.select(this).attr('fill', '#bbdefb');
-                // 取消其他字段的选中状态
-                g.selectAll('rect').filter((f, idx) => f.id !== field.id).attr('fill', (f, idx) => idx % 2 === 0 ? '#f8f9fa' : '#ffffff');
+                // 如果当前字段已被选中，则取消选中
+                if (selectedField === field.id) {
+                  setSelectedField(null);
+                  // 恢复原始背景色
+                  d3.select(this).attr('fill', index % 2 === 0 ? '#f8f9fa' : '#ffffff');
+                } else {
+                  // 设置当前字段为选中状态
+                  setSelectedField(field.id);
+                  // 高亮显示选中字段
+                  d3.select(this).attr('fill', '#bbdefb');
+                  // 取消其他字段的选中状态
+                  g.selectAll('rect').filter((f, idx) => f.id !== field.id).attr('fill', (f, idx) => idx % 2 === 0 ? '#f8f9fa' : '#ffffff');
+                }
               }
             });
           
@@ -442,14 +450,7 @@ const MappingModal = ({
             .attr('fill', '#666')
             .attr('font-size', '11px');
           
-          // 主键标识
-          if (field.isPrimaryKey) {
-            g.append('circle')
-              .attr('cx', tableWidth - 30)
-              .attr('cy', fieldY + 12)
-              .attr('r', 5)
-              .attr('fill', '#f59e0b');
-          }
+
         });
       }
       
@@ -551,12 +552,19 @@ const MappingModal = ({
                 setSelectedField(null);
                 setSelectedProperty(null);
               } else {
-                // 设置当前属性为选中状态
-                setSelectedProperty(field.property.id);
-                // 高亮显示选中属性
-                d3.select(this).attr('fill', '#c8e6c9');
-                // 取消其他字段的选中状态
-                g.selectAll('rect').filter((f, idx) => f.id !== field.id).attr('fill', (f, idx) => idx % 2 === 0 ? '#f0fdf4' : '#ffffff');
+                // 如果当前属性已被选中，则取消选中
+                if (selectedProperty === field.property.id) {
+                  setSelectedProperty(null);
+                  // 恢复原始背景色
+                  d3.select(this).attr('fill', index % 2 === 0 ? '#f0fdf4' : '#ffffff');
+                } else {
+                  // 设置当前属性为选中状态
+                  setSelectedProperty(field.property.id);
+                  // 高亮显示选中属性
+                  d3.select(this).attr('fill', '#c8e6c9');
+                  // 取消其他字段的选中状态
+                  g.selectAll('rect').filter((f, idx) => f.id !== field.id).attr('fill', (f, idx) => idx % 2 === 0 ? '#f0fdf4' : '#ffffff');
+                }
               }
             });
           
@@ -577,23 +585,7 @@ const MappingModal = ({
             .attr('fill', '#666')
             .attr('font-size', '11px');
           
-          // 主键标识
-          if (field.isPrimaryKey) {
-            g.append('circle')
-              .attr('cx', tableWidth - 30)
-              .attr('cy', fieldY + 12)
-              .attr('r', 5)
-              .attr('fill', '#10b981');
-          }
-          
-          // 外键标识
-          if (field.isForeignKey) {
-            g.append('circle')
-              .attr('cx', tableWidth - 50)
-              .attr('cy', fieldY + 12)
-              .attr('r', 5)
-              .attr('fill', '#3b82f6');
-          }
+
         });
       }
       
@@ -613,7 +605,7 @@ const MappingModal = ({
       .attr('stroke', '#f59e0b')
       .attr('stroke-width', 2)
       .attr('stroke-dasharray', '5,5')
-      .attr('opacity', 0.6)
+      .attr('opacity', 0.8)
       .attr('marker-end', 'url(#mappingArrow)')
       .style('display', 'none');
     
@@ -702,6 +694,10 @@ const MappingModal = ({
       link
         .attr('x1', d => {
           const sourceNode = nodes.find(n => n.id === d.source.id);
+          if (sourceNode && (sourceNode.type === 'table' || sourceNode.type === 'model')) {
+            // 从左侧表的右边边缘开始连线
+            return sourceNode.x + 100; // 表格宽度的一半
+          }
           return sourceNode ? sourceNode.x : 0;
         })
         .attr('y1', d => {
@@ -716,6 +712,10 @@ const MappingModal = ({
         })
         .attr('x2', d => {
           const targetNode = nodes.find(n => n.id === d.target.id);
+          if (targetNode && (targetNode.type === 'table' || targetNode.type === 'model')) {
+            // 到右侧表的左边边缘结束连线
+            return targetNode.x - 100; // 表格宽度的一半
+          }
           return targetNode ? targetNode.x : 0;
         })
         .attr('y2', d => {
@@ -748,6 +748,12 @@ const MappingModal = ({
               );
               if (fieldIndex >= 0) {
                 sourceY = sourceNode.y + 30 + fieldIndex * 25 + 12.5;
+                // 修正预览连线的起始位置，确保连接到表的边缘
+                if (sourceNode.type === 'table') {
+                  sourceX = sourceNode.x + 100; // 从左侧表的右边边缘开始
+                } else if (sourceNode.type === 'model') {
+                  sourceX = sourceNode.x - 100; // 从右侧表的左边边缘开始
+                }
               }
             }
             previewLine
