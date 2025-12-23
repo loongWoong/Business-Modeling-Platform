@@ -70,6 +70,12 @@ const DomainWorkbench = () => {
     unit: ''
   });
 
+  // 视图模式状态
+  const [modelViewMode, setModelViewMode] = useState('card');
+  const [attributeViewMode, setAttributeViewMode] = useState('card');
+  const [relationViewMode, setRelationViewMode] = useState('card');
+  const [indicatorViewMode, setIndicatorViewMode] = useState('card');
+
   // 显示通知
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
@@ -766,6 +772,8 @@ const DomainWorkbench = () => {
             setSearchTerm={setSearchTerm}
             handleEditModel={handleEditModel}
             handleDeleteModel={handleDeleteModel}
+            viewMode={modelViewMode}
+            setViewMode={setModelViewMode}
           />
         )}
 
@@ -777,6 +785,8 @@ const DomainWorkbench = () => {
             setSearchTerm={setSearchTerm}
             handleEditAttr={handleEditAttr}
             handleDeleteAttr={handleDeleteAttr}
+            viewMode={attributeViewMode}
+            setViewMode={setAttributeViewMode}
           />
         )}
         
@@ -789,6 +799,8 @@ const DomainWorkbench = () => {
             handleEditRelation={handleEditRelation}
             handleDeleteRelation={handleDeleteRelation}
             handleToggleRelation={handleToggleRelation}
+            viewMode={relationViewMode}
+            setViewMode={setRelationViewMode}
           />
         )}
         
@@ -803,6 +815,8 @@ const DomainWorkbench = () => {
             handlePublishIndicator={handlePublishIndicator}
             handleOfflineIndicator={handleOfflineIndicator}
             handleCopyIndicator={handleCopyIndicator}
+            viewMode={indicatorViewMode}
+            setViewMode={setIndicatorViewMode}
           />
         )}
       </div>
