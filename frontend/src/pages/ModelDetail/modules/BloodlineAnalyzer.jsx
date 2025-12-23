@@ -290,8 +290,21 @@ const BloodlineAnalyzer = ({ model, bloodlineType, setBloodlineType, bloodlineDa
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('fill', '#94a3b8');
     
+    // 创建缩放容器组
+    const g = svg.append('g');
+
+    // 添加缩放行为
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 4]) // 设置缩放范围
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+      });
+
+    // 将缩放行为应用到SVG
+    svg.call(zoom);
+
     // 创建边组
-    const linkGroup = svg.append('g')
+    const linkGroup = g.append('g')
       .attr('class', 'link-group');
     
     // 创建边
@@ -318,7 +331,7 @@ const BloodlineAnalyzer = ({ model, bloodlineType, setBloodlineType, bloodlineDa
       .text(d => d.name);
     
     // 创建节点组
-    const nodeGroup = svg.append('g')
+    const nodeGroup = g.append('g')
       .selectAll('g')
       .data(bloodlineData.nodes)
       .enter().append('g')

@@ -208,15 +208,28 @@ const DomainMap = () => {
       .attr('stop-color', d => d.color)
       .attr('stop-opacity', d => d.opacity)
 
+    // 创建缩放容器组
+    const g = svg.append('g');
+
+    // 添加缩放行为
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 4]) // 设置缩放范围
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+      });
+
+    // 将缩放行为应用到SVG
+    svg.call(zoom);
+
     // 创建边
-    const link = svg.append('g')
+    const link = g.append('g')
       .selectAll('line')
       .data(links)
       .enter().append('line')
       .attr('class', 'sci-fi-link')
 
     // 创建节点组
-    const nodeGroup = svg.append('g')
+    const nodeGroup = g.append('g')
       .selectAll('g')
       .data(nodes)
       .enter().append('g')
