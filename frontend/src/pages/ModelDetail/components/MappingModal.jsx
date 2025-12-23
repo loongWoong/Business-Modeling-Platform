@@ -13,6 +13,8 @@ const MappingModal = ({
   const containerRef = useRef(null);
   const [mappings, setMappings] = useState([]); // 映射关系: [{ fieldId, propertyId }]
   const [draggingFrom, setDraggingFrom] = useState(null); // { type: 'field'|'property', id, x, y }
+  const [selectedField, setSelectedField] = useState(null); // 选中的字段
+  const [selectedProperty, setSelectedProperty] = useState(null); // 选中的属性
   const [tableStructure, setTableStructure] = useState(null); // 表结构数据
 
   // 根据数据源表名生成对应的表结构数据（实际应该从API获取）
@@ -109,6 +111,36 @@ const MappingModal = ({
       console.error('Failed to save mappings:', error);
       alert('映射关系保存失败');
     }
+  };
+
+  // 自动映射字段到属性
+  const autoMapFields = () => {
+    if (!tableStructure || !modelProperties) return;
+    
+    const tableFields = tableStructure.tables[0]?.fields || [];
+    
+    // 按顺序将字段映射到属性
+    const newMappings = [];
+    const minCount = Math.min(tableFields.length, modelProperties.length);
+    
+    for (let i = 0; i < minCount; i++) {
+      const newMapping = {
+        fieldId: tableFields[i].id,
+        propertyId: modelProperties[i].id
+      };
+      
+      // 检查是否已存在相同映射
+      const exists = mappings.some(m => 
+        m.fieldId === newMapping.fieldId && m.propertyId === newMapping.propertyId
+      );
+      
+      if (!exists) {
+        newMappings.push(newMapping);
+      }
+    }
+    
+    // 添加新映射到现有映射中
+    setMappings([...mappings, ...newMappings]);
   };
 
   // 使用D3.js绘制ER图
@@ -334,7 +366,12 @@ const MappingModal = ({
             .attr('y', fieldY)
             .attr('width', tableWidth)
             .attr('height', 25)
-            .attr('fill', index % 2 === 0 ? '#f8f9fa' : '#ffffff')
+            .attr('fill', () => {
+              if (selectedField === field.id) {
+                return '#bbdefb'; // 选中状态的蓝色
+              }
+              return index % 2 === 0 ? '#f8f9fa' : '#ffffff';
+            })
             .attr('stroke', '#e0e0e0')
             .attr('stroke-width', 1)
             .style('cursor', 'pointer')
@@ -346,6 +383,9 @@ const MappingModal = ({
             })
             .on('mousedown', function(event) {
               event.stopPropagation();
+              // 清除选择状态
+              setSelectedField(null);
+              setSelectedProperty(null);
               const fieldIndex = d.fields.findIndex(f => f.id === field.id);
               const fieldY = d.y + 30 + fieldIndex * 25 + 12.5;
               setDraggingFrom({
@@ -356,6 +396,33 @@ const MappingModal = ({
                 x: d.x,
                 y: fieldY
               });
+            })
+            .on('click', function(event) {
+              event.stopPropagation();
+              // 如果已有选中的属性，则创建映射
+              if (selectedProperty) {
+                const newMapping = {
+                  fieldId: field.id,
+                  propertyId: selectedProperty
+                };
+                // 检查是否已存在
+                const exists = mappings.some(m => 
+                  m.fieldId === newMapping.fieldId && m.propertyId === newMapping.propertyId
+                );
+                if (!exists) {
+                  setMappings([...mappings, newMapping]);
+                }
+                // 清除选择状态
+                setSelectedProperty(null);
+                setSelectedField(null);
+              } else {
+                // 设置当前字段为选中状态
+                setSelectedField(field.id);
+                // 高亮显示选中字段
+                d3.select(this).attr('fill', '#bbdefb');
+                // 取消其他字段的选中状态
+                g.selectAll('rect').filter((f, idx) => f.id !== field.id).attr('fill', (f, idx) => idx % 2 === 0 ? '#f8f9fa' : '#ffffff');
+              }
             });
           
           // 字段名
@@ -433,7 +500,12 @@ const MappingModal = ({
             .attr('y', fieldY)
             .attr('width', tableWidth)
             .attr('height', 25)
-            .attr('fill', index % 2 === 0 ? '#f0fdf4' : '#ffffff')
+            .attr('fill', () => {
+              if (selectedProperty === field.property.id) {
+                return '#c8e6c9'; // 选中状态的绿色
+              }
+              return index % 2 === 0 ? '#f0fdf4' : '#ffffff';
+            })
             .attr('stroke', '#d1fae5')
             .attr('stroke-width', 1)
             .style('cursor', 'pointer')
@@ -445,6 +517,9 @@ const MappingModal = ({
             })
             .on('mousedown', function(event) {
               event.stopPropagation();
+              // 清除选择状态
+              setSelectedField(null);
+              setSelectedProperty(null);
               const fieldIndex = d.fields.findIndex(f => f.id === field.id);
               const fieldYPos = d.y + 30 + fieldIndex * 25 + 12.5;
               setDraggingFrom({
@@ -456,6 +531,33 @@ const MappingModal = ({
                 x: d.x,
                 y: fieldYPos
               });
+            })
+            .on('click', function(event) {
+              event.stopPropagation();
+              // 如果已有选中的字段，则创建映射
+              if (selectedField) {
+                const newMapping = {
+                  fieldId: selectedField,
+                  propertyId: field.property.id
+                };
+                // 检查是否已存在
+                const exists = mappings.some(m => 
+                  m.fieldId === newMapping.fieldId && m.propertyId === newMapping.propertyId
+                );
+                if (!exists) {
+                  setMappings([...mappings, newMapping]);
+                }
+                // 清除选择状态
+                setSelectedField(null);
+                setSelectedProperty(null);
+              } else {
+                // 设置当前属性为选中状态
+                setSelectedProperty(field.property.id);
+                // 高亮显示选中属性
+                d3.select(this).attr('fill', '#c8e6c9');
+                // 取消其他字段的选中状态
+                g.selectAll('rect').filter((f, idx) => f.id !== field.id).attr('fill', (f, idx) => idx % 2 === 0 ? '#f0fdf4' : '#ffffff');
+              }
             });
           
           // 属性名
@@ -589,6 +691,9 @@ const MappingModal = ({
         setDraggingFrom(null);
         // 隐藏预览连线
         svg.select('.preview-link').style('display', 'none');
+        // 清除选择状态
+        setSelectedField(null);
+        setSelectedProperty(null);
       }
     });
 
@@ -690,6 +795,12 @@ const MappingModal = ({
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    setSelectedField(null);
+    setSelectedProperty(null);
+    onClose();
+  };
+
   return (
     <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="modal-content" style={{ width: '90vw', height: '90vh', maxWidth: '1400px', maxHeight: '900px' }}>
@@ -699,7 +810,10 @@ const MappingModal = ({
             <button onClick={saveMappings} style={{ marginRight: '10px', padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
               保存映射
             </button>
-            <button onClick={onClose} style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            <button onClick={autoMapFields} style={{ marginRight: '10px', padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              自动映射
+            </button>
+            <button onClick={handleClose} style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
               关闭
             </button>
           </div>
