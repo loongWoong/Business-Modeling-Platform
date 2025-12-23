@@ -1063,8 +1063,10 @@ body {
 .content {
   background: var(--bg-secondary);
   min-height: calc(100vh - 180px);
+  max-height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 /* 通用按钮悬停禁用状态 */
