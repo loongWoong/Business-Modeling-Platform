@@ -97,9 +97,9 @@ const PropertyModal = ({
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item label="长度">
-              <Input.Number
+              <Input
                 value={newProperty.length}
-                onChange={(value) => setNewProperty({ ...newProperty, length: value })}
+                onChange={(e) => setNewProperty({ ...newProperty, length: e.target.value })}
                 placeholder="字段长度"
                 style={{ width: '100%' }}
               />
@@ -108,9 +108,9 @@ const PropertyModal = ({
           
           <Col span={12}>
             <Form.Item label="精度">
-              <Input.Number
+              <Input
                 value={newProperty.precision}
-                onChange={(value) => setNewProperty({ ...newProperty, precision: value })}
+                onChange={(e) => setNewProperty({ ...newProperty, precision: e.target.value })}
                 placeholder="小数位数"
                 style={{ width: '100%' }}
               />

@@ -108,8 +108,14 @@ const ModelDetail = () => {
   const [newIndicator, setNewIndicator] = useState({
     name: '',
     expression: '',
+    dimensions: [],
+    filters: [],
+    sortFields: [],
     returnType: 'number',
-    description: ''
+    description: '',
+    status: 'draft',
+    unit: '',
+    relatedProperties: []
   });
   
   // 血缘分析相关状态
@@ -607,6 +613,7 @@ const ModelDetail = () => {
             newIndicator={newIndicator}
             setNewIndicator={setNewIndicator}
             modelId={modelId}
+            properties={properties}
           />
         )}
 
@@ -897,24 +904,45 @@ const ModelDetail = () => {
         setNewIndicator={setNewIndicator}
         setIsIndicatorModalOpen={setIsIndicatorModalOpen}
         setEditingIndicator={setEditingIndicator}
+        properties={properties}
         handleSaveIndicator={() => {
           if (editingIndicator) {
             // 更新指标
             fetch(`/api/indicator/${editingIndicator.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newIndicator)
+              body: JSON.stringify({
+                ...newIndicator,
+                dimensions: newIndicator.dimensions || [],
+                filters: newIndicator.filters || [],
+                sortFields: newIndicator.sortFields || [],
+                relatedProperties: newIndicator.relatedProperties || []
+              })
             })
               .then(response => response.json())
               .then(updatedIndicator => {
+                // 更新语义指标列表
                 setSemanticIndicators(semanticIndicators.map(i => i.id === updatedIndicator.id ? updatedIndicator : i));
+                
+                // 检查该指标是否在绑定列表中，如果是，也要更新绑定列表
+                const isBound = boundIndicators.some(b => b.id === updatedIndicator.id);
+                if (isBound) {
+                  setBoundIndicators(boundIndicators.map(i => i.id === updatedIndicator.id ? updatedIndicator : i));
+                }
+                
                 setIsIndicatorModalOpen(false);
                 setEditingIndicator(null);
                 setNewIndicator({
                   name: '',
                   expression: '',
+                  dimensions: [],
+                  filters: [],
+                  sortFields: [],
                   returnType: 'number',
-                  description: ''
+                  description: '',
+                  status: 'draft',
+                  unit: '',
+                  relatedProperties: []
                 });
                 showNotification('指标更新成功');
               })
@@ -927,7 +955,14 @@ const ModelDetail = () => {
             fetch('/api/indicator', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newIndicator)
+              body: JSON.stringify({
+                ...newIndicator,
+                dimensions: newIndicator.dimensions || [],
+                filters: newIndicator.filters || [],
+                sortFields: newIndicator.sortFields || [],
+                relatedProperties: newIndicator.relatedProperties || [],
+                modelId: parseInt(modelId)
+              })
             })
               .then(response => response.json())
               .then(indicator => {
@@ -937,8 +972,14 @@ const ModelDetail = () => {
                 setNewIndicator({
                   name: '',
                   expression: '',
+                  dimensions: [],
+                  filters: [],
+                  sortFields: [],
                   returnType: 'number',
-                  description: ''
+                  description: '',
+                  status: 'draft',
+                  unit: '',
+                  relatedProperties: []
                 });
                 showNotification('指标创建成功');
               })

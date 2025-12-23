@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Tag, Modal, Input, Select, Form, Tabs, Card } from 'antd';
+import { EditOutlined, DeleteOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons';
+
+const { Option } = Select;
+const { TextArea } = Input;
 
 const SemanticIndicatorManager = ({ 
   semanticIndicators,
@@ -13,7 +18,8 @@ const SemanticIndicatorManager = ({
   setEditingIndicator,
   newIndicator,
   setNewIndicator,
-  modelId
+  modelId,
+  properties
 }) => {
   // 处理创建指标
   const handleCreateIndicator = () => {
@@ -24,14 +30,22 @@ const SemanticIndicatorManager = ({
     })
       .then(response => response.json())
       .then(indicator => {
-        setSemanticIndicators([...semanticIndicators, indicator]);
+        const updatedSemanticIndicators = [...semanticIndicators, indicator];
+        setSemanticIndicators(updatedSemanticIndicators);
+        
         setIsIndicatorModalOpen(false);
         setEditingIndicator(null);
         setNewIndicator({
           name: '',
           expression: '',
+          dimensions: [],
+          filters: [],
+          sortFields: [],
           returnType: 'number',
-          description: ''
+          description: '',
+          status: 'draft',
+          unit: '',
+          relatedProperties: []
         });
         showNotification('指标创建成功');
       })
@@ -63,8 +77,14 @@ const SemanticIndicatorManager = ({
         setNewIndicator({
           name: '',
           expression: '',
+          dimensions: [],
+          filters: [],
+          sortFields: [],
           returnType: 'number',
-          description: ''
+          description: '',
+          status: 'draft',
+          unit: '',
+          relatedProperties: []
         });
         showNotification('指标更新成功');
       })
@@ -116,7 +136,9 @@ const SemanticIndicatorManager = ({
     })
       .then(response => {
         if (response.ok) {
-          setBoundIndicators([...boundIndicators, indicator]);
+          // 确保指标数据是最新的，如果来自创建过程，可能需要更新完整数据
+          const fullIndicator = semanticIndicators.find(i => i.id === indicator.id) || indicator;
+          setBoundIndicators([...boundIndicators, fullIndicator]);
           showNotification(`指标 "${indicator.name}" 绑定成功`);
         } else {
           throw new Error('绑定失败');
@@ -147,140 +169,219 @@ const SemanticIndicatorManager = ({
       });
   };
 
+  // 格式化维度显示
+  const formatDimensions = (dimensions) => {
+    if (!dimensions || dimensions.length === 0) return '-';
+    return dimensions.map(dim => (
+      <Tag key={dim.id} color="blue">
+        {dim.name} ({dim.propertyName})
+      </Tag>
+    ));
+  };
+
+  // 格式化过滤条件显示
+  const formatFilters = (filters) => {
+    if (!filters || filters.length === 0) return '-';
+    return filters.map(filter => (
+      <Tag key={filter.id} color="green">
+        {filter.propertyName} {filter.operator} {filter.value}
+      </Tag>
+    ));
+  };
+
+  // 格式化排序字段显示
+  const formatSortFields = (sortFields) => {
+    if (!sortFields || sortFields.length === 0) return '-';
+    return sortFields.map(sort => (
+      <Tag key={sort.id} color="orange">
+        {sort.propertyName} ({sort.direction})
+      </Tag>
+    ));
+  };
+
+  // 表格列定义
+  const columns = [
+    {
+      title: '指标名称',
+      dataIndex: 'name',
+      key: 'name',
+      width: 150,
+      render: (text) => <strong>{text}</strong>
+    },
+    {
+      title: '表达式',
+      dataIndex: 'expression',
+      key: 'expression',
+      width: 200,
+      render: (text) => (
+        <div style={{ wordBreak: 'break-word', maxWidth: '200px' }}>
+          <code>{text}</code>
+        </div>
+      )
+    },
+    {
+      title: '维度',
+      dataIndex: 'dimensions',
+      key: 'dimensions',
+      width: 200,
+      render: (dimensions) => formatDimensions(dimensions)
+    },
+    {
+      title: '过滤条件',
+      dataIndex: 'filters',
+      key: 'filters',
+      width: 200,
+      render: (filters) => formatFilters(filters)
+    },
+    {
+      title: '排序',
+      dataIndex: 'sortFields',
+      key: 'sortFields',
+      width: 150,
+      render: (sortFields) => formatSortFields(sortFields)
+    },
+    {
+      title: '返回类型',
+      dataIndex: 'returnType',
+      key: 'returnType',
+      width: 100,
+      render: (type) => (
+        <Tag color={
+          type === 'number' ? 'cyan' : 
+          type === 'string' ? 'blue' : 
+          type === 'boolean' ? 'purple' : 
+          type === 'date' ? 'green' : 'default'
+        }>
+          {type}
+        </Tag>
+      )
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status) => (
+        <Tag color={
+          status === 'published' ? 'green' : 
+          status === 'draft' ? 'orange' : 
+          status === 'offline' ? 'red' : 'default'
+        }>
+          {status === 'published' ? '已发布' : status === 'draft' ? '草稿' : '已下线'}
+        </Tag>
+      )
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 180,
+      render: (_, record) => (
+        <Space size="middle">
+          <Button 
+            type="link" 
+            icon={<EditOutlined />} 
+            onClick={() => handleEditIndicator(record)}
+          >
+            编辑
+          </Button>
+          <Button 
+            type="link" 
+            icon={<DeleteOutlined />} 
+            danger
+            onClick={() => handleDeleteIndicator(record.id)}
+          >
+            删除
+          </Button>
+          {boundIndicators.find(b => b.id === record.id) ? (
+            <Button 
+              type="primary" 
+              danger
+              size="small"
+              onClick={() => handleUnbindIndicator(record.id)}
+            >
+              解绑
+            </Button>
+          ) : (
+            <Button 
+              type="primary" 
+              size="small"
+              onClick={() => handleBindIndicator(record)}
+            >
+              绑定
+            </Button>
+          )}
+        </Space>
+      )
+    }
+  ];
+
   return (
     <div className="semantic-indicator-manager">
-      <div className="header-toolbar">
+      <div className="header-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#fafafa', borderBottom: '1px solid #e8e8e8' }}>
         <div>
-          <button onClick={() => setIsIndicatorModalOpen(true)}>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />}
+            onClick={() => setIsIndicatorModalOpen(true)}
+          >
             新建指标
-          </button>
+          </Button>
         </div>
         <div>
           <input
             type="text"
             placeholder="搜索指标名称..."
             onChange={(e) => console.log('搜索指标:', e.target.value)}
+            style={{ padding: '6px 12px', border: '1px solid #d9d9d9', borderRadius: '4px', marginRight: '8px' }}
           />
-          <button onClick={() => console.log('导出指标')}>导出</button>
-          <button onClick={() => console.log('导入指标')}>导入</button>
+          <Button style={{ marginRight: '8px' }}>导出</Button>
+          <Button>导入</Button>
         </div>
       </div>
       
-      <div style={{ display: 'flex', gap: '24px', padding: '20px' }}>
-        {/* 左侧可选指标 */}
-        <div style={{ flex: 1, backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', backgroundColor: 'var(--primary-light)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ color: 'var(--primary-color)', margin: 0, fontSize: '18px' }}>可用指标</h3>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{semanticIndicators.length} 个指标</span>
-          </div>
-          <div style={{ padding: '20px', maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}>
-            {semanticIndicators.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '40px 0' }}>
-                <p>暂无可用指标</p>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-                {semanticIndicators.map(indicator => (
-                  <div key={indicator.id} className="card" style={{ padding: '16px', margin: 0, border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>{indicator.name}</h4>
-                      <span className={`status-badge ${indicator.status}`}>
-                        {indicator.status === 'published' ? '已发布' : '草稿'}
-                      </span>
-                    </div>
-                    <div style={{ marginBottom: '8px', fontSize: '14px' }}>
-                      <strong>表达式:</strong> <code>{indicator.expression}</code>
-                    </div>
-                    <div style={{ marginBottom: '8px', fontSize: '14px' }}>
-                      <strong>返回类型:</strong> {indicator.returnType}
-                    </div>
-                    <div style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                      {indicator.description}
-                    </div>
-                    <button 
-                      onClick={() => handleBindIndicator(indicator)}
-                      disabled={boundIndicators.find(b => b.id === indicator.id)}
-                      className={boundIndicators.find(b => b.id === indicator.id) ? 'disabled' : 'edit'}
-                      style={{ 
-                        padding: '6px 14px', 
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        borderRadius: 'var(--radius-sm)',
-                        transition: 'all var(--transition-fast)',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: boundIndicators.find(b => b.id === indicator.id) ? 'var(--bg-tertiary)' : 'var(--success-color)',
-                        color: boundIndicators.find(b => b.id === indicator.id) ? 'var(--text-secondary)' : 'white',
-                        boxShadow: boundIndicators.find(b => b.id === indicator.id) ? 'none' : '0 2px 4px rgba(16, 185, 129, 0.2)',
-                        width: 'auto',
-                        alignSelf: 'flex-start'
-                      }}
-                    >
-                      {boundIndicators.find(b => b.id === indicator.id) ? '已绑定' : '绑定'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+      {/* 已绑定指标表格 */}
+      <div style={{ padding: '20px' }}>
+        <Card 
+          title={`已绑定指标 (${boundIndicators.length})`} 
+          style={{ marginBottom: '24px' }}
+          extra={
+            <Tag color="green" style={{ fontSize: '14px' }}>
+              模型关联
+            </Tag>
+          }
+        >
+          {boundIndicators.length > 0 ? (
+            <Table 
+              dataSource={boundIndicators} 
+              columns={columns} 
+              rowKey="id"
+              pagination={{ pageSize: 10 }}
+              scroll={{ x: 'max-content' }}
+            />
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#bfbfbf' }}>
+              <p>暂无绑定的指标</p>
+              <p>请从下方可用指标中选择需要的指标进行绑定</p>
+            </div>
+          )}
+        </Card>
 
-        {/* 右侧已绑定指标 */}
-        <div style={{ flex: 1, backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', backgroundColor: 'var(--success-light)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ color: 'var(--success-color)', margin: 0, fontSize: '18px' }}>已绑定指标</h3>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{boundIndicators.length} 个指标</span>
-          </div>
-          <div style={{ padding: '20px', maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}>
-            {boundIndicators.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '40px 0' }}>
-                <p>暂无绑定的指标</p>
-                <p style={{ fontSize: '14px', marginTop: '8px' }}>从左侧选择指标进行绑定</p>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-                {boundIndicators.map(indicator => (
-                  <div key={indicator.id} className="card" style={{ padding: '16px', margin: 0, borderLeft: '4px solid var(--success-color)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>{indicator.name}</h4>
-                      <span className={`status-badge ${indicator.status}`}>
-                        {indicator.status === 'published' ? '已发布' : '草稿'}
-                      </span>
-                    </div>
-                    <div style={{ marginBottom: '8px', fontSize: '14px' }}>
-                      <strong>表达式:</strong> <code>{indicator.expression}</code>
-                    </div>
-                    <div style={{ marginBottom: '8px', fontSize: '14px' }}>
-                      <strong>返回类型:</strong> {indicator.returnType}
-                    </div>
-                    <div style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                      {indicator.description}
-                    </div>
-                    <button 
-                      onClick={() => handleUnbindIndicator(indicator.id)}
-                      className="delete"
-                      style={{ 
-                        padding: '6px 14px', 
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        borderRadius: 'var(--radius-sm)',
-                        transition: 'all var(--transition-fast)',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: 'var(--error-color)',
-                        color: 'white',
-                        width: 'auto',
-                        alignSelf: 'flex-start'
-                      }}
-                    >
-                      解绑
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <Card 
+          title={`可用指标 (${semanticIndicators.length})`} 
+          extra={
+            <Tag color="blue" style={{ fontSize: '14px' }}>
+              全局指标
+            </Tag>
+          }
+        >
+          <Table 
+            dataSource={semanticIndicators.filter(ind => !boundIndicators.some(b => b.id === ind.id))} 
+            columns={columns} 
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+            scroll={{ x: 'max-content' }}
+          />
+        </Card>
       </div>
     </div>
   );
