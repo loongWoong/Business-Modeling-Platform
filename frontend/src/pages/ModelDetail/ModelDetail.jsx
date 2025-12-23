@@ -617,6 +617,8 @@ const ModelDetail = () => {
             bloodlineType={bloodlineType}
             setBloodlineType={setBloodlineType}
             bloodlineData={bloodlineData}
+            allData={{ models: allModels, properties: properties }}
+            relations={relations}
           />
         )}
       </div>
