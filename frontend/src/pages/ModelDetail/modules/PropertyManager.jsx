@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as d3 from 'd3';
+import Pagination from '../../../components/Pagination';
 
 const PropertyManager = ({ 
   model, 
@@ -144,6 +145,22 @@ const PropertyManager = ({
       setSelectedProperties(properties.map(p => p.id));
     }
   };
+  
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // 计算分页数据
+  const totalItems = properties.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedProperties = properties.slice(startIndex, endIndex);
+  
+  // 重置到第一页当数据改变时
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [properties]);
 
   return (
     <div className="property-manager">
@@ -224,7 +241,7 @@ const PropertyManager = ({
               </tr>
             </thead>
             <tbody>
-              {properties.map(property => (
+              {paginatedProperties.map(property => (
                 <tr key={property.id}>
                   <td>
                     <input
@@ -256,9 +273,9 @@ const PropertyManager = ({
           </table>
         </div>
       ) : (
-        <div className="card-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', padding: '16px' }}>
-          {properties.map(property => (
-            <div key={property.id} className="card" style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div className="card-list grid">
+          {paginatedProperties.map(property => (
+            <div key={property.id} className="card">
               <h3>{property.name}</h3>
               <p><strong>类型:</strong> {property.type}</p>
               <p><strong>必填:</strong> {property.required ? '是' : '否'}</p>
@@ -273,13 +290,25 @@ const PropertyManager = ({
                 </span>
               </p>
               <p><strong>描述:</strong> {property.description}</p>
-              <div className="card-actions" style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+              <div className="card-actions">
                 <button className="edit" onClick={() => handleEditProperty(property)}>编辑</button>
                 <button className="delete" onClick={() => handleDeleteProperty(property.id)}>删除</button>
               </div>
             </div>
           ))}
         </div>
+      )}
+      
+      {/* 分页组件 */}
+      {totalItems > pageSize && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageSizeChange={setPageSize}
+        />
       )}
     </div>
   );

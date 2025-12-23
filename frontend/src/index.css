@@ -852,6 +852,26 @@ body {
 .table-container {
   padding: 20px;
   background: var(--bg-secondary);
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
 }
 
 /* 数据表格样式 - 现代表格设计 */
@@ -1019,6 +1039,8 @@ body {
 .content {
   background: var(--bg-secondary);
   min-height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
 }
 
 /* 通用按钮悬停禁用状态 */
@@ -1031,6 +1053,150 @@ button:disabled {
 /* 平滑滚动 */
 * {
   scroll-behavior: smooth;
+}
+
+/* 分页组件样式 */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+  margin-top: 16px;
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.page-size-selector {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.page-size-selector:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 14px;
+  min-width: 40px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.pagination-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.pagination-btn.active:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn.ellipsis {
+  border: none;
+  background: transparent;
+  cursor: default;
+  min-width: auto;
+}
+
+/* 列表容器滚动样式 */
+.scrollable-container {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* 卡片列表滚动样式 */
+.card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 24px;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+}
+
+.card-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.card-list::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.card-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.card-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* 为兼容现有样式，保持原有卡片列表样式 */
+.card-list.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 24px;
 }
 
 /* 代码样式 */

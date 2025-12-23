@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Pagination from '../../../components/Pagination';
 
 const SemanticIndicatorManager = ({ 
   semanticIndicators, 
@@ -16,6 +17,22 @@ const SemanticIndicatorManager = ({
     indicator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     indicator.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // 计算分页数据
+  const totalItems = filteredIndicators.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedIndicators = filteredIndicators.slice(startIndex, endIndex);
+  
+  // 重置到第一页当数据改变时
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredIndicators]);
 
   return (
     <>
@@ -52,7 +69,7 @@ const SemanticIndicatorManager = ({
               </tr>
             </thead>
             <tbody>
-              {filteredIndicators.map(indicator => (
+              {paginatedIndicators.map(indicator => (
                 <tr key={indicator.id}>
                   <td>{indicator.name}</td>
                   <td>{indicator.expression}</td>
@@ -80,9 +97,9 @@ const SemanticIndicatorManager = ({
           </table>
         </div>
       ) : (
-        <div className="card-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', padding: '16px' }}>
-          {filteredIndicators.map(indicator => (
-            <div key={indicator.id} className="card" style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div className="card-list grid">
+          {paginatedIndicators.map(indicator => (
+            <div key={indicator.id} className="card">
               <h3>{indicator.name}</h3>
               <p>表达式: {indicator.expression}</p>
               <p>返回类型: {indicator.returnType}</p>
@@ -92,7 +109,7 @@ const SemanticIndicatorManager = ({
                 indicator.status === 'published' ? '已发布' : 
                 indicator.status === 'offline' ? '已下线' : '草稿'
               }</p>
-              <div className="card-actions" style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+              <div className="card-actions">
                 <button className="edit" onClick={() => handleEditIndicator(indicator)}>编辑</button>
                 {indicator.status === 'draft' && (
                   <button onClick={() => handlePublishIndicator(indicator.id)}>发布</button>
@@ -106,6 +123,18 @@ const SemanticIndicatorManager = ({
             </div>
           ))}
         </div>
+      )}
+      
+      {/* 分页组件 */}
+      {totalItems > pageSize && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageSizeChange={setPageSize}
+        />
       )}
     </>
   );

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Pagination from '../../../components/Pagination';
 
 const ModelManager = ({ 
   filteredModels, 
@@ -11,6 +12,22 @@ const ModelManager = ({
   setViewMode
 }) => {
   const navigate = useNavigate();
+  
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // 计算分页数据
+  const totalItems = filteredModels.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedModels = filteredModels.slice(startIndex, endIndex);
+  
+  // 重置到第一页当数据改变时
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredModels]);
 
   return (
     <>
@@ -45,7 +62,7 @@ const ModelManager = ({
               </tr>
             </thead>
             <tbody>
-              {filteredModels.map(model => (
+              {paginatedModels.map(model => (
                 <tr key={model.id}>
                   <td>{model.name}</td>
                   <td>{model.description}</td>
@@ -62,19 +79,18 @@ const ModelManager = ({
           </table>
         </div>
       ) : (
-        <div className="card-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', padding: '16px' }}>
-          {filteredModels.map(model => (
+        <div className="card-list grid">
+          {paginatedModels.map(model => (
             <div 
               key={model.id} 
               className="card"
               onDoubleClick={() => navigate(`/model/${model.id}`)}
-              style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
             >
               <h3>{model.name}</h3>
               <p>描述: {model.description}</p>
               <p>创建人: {model.creator}</p>
               <p>更新时间: {model.updatedAt}</p>
-              <div className="card-actions" style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+              <div className="card-actions">
                 <button className="edit" onClick={(e) => {
                   e.stopPropagation();
                   handleEditModel(model);
@@ -91,6 +107,18 @@ const ModelManager = ({
             </div>
           ))}
         </div>
+      )}
+      
+      {/* 分页组件 */}
+      {totalItems > pageSize && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageSizeChange={setPageSize}
+        />
       )}
     </>
   );
