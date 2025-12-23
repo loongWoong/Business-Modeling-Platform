@@ -131,7 +131,17 @@ mock_data = {
         {"id": 29, "name": "标识点名称", "type": "string", "required": True, "description": "标识点名称", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_name"},
         {"id": 30, "name": "经度", "type": "number", "required": True, "description": "标识点经度", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "BETWEEN(-180, 180)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "longitude"},
         {"id": 31, "name": "纬度", "type": "number", "required": True, "description": "标识点纬度", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "BETWEEN(-90, 90)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "latitude"},
-        {"id": 32, "name": "标识点类型", "type": "string", "required": True, "description": "标识点类型", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(入口, 出口, 中间点)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_type"}
+        {"id": 32, "name": "标识点类型", "type": "string", "required": True, "description": "标识点类型", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(入口, 出口, 中间点)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_type"},
+        
+        # 车辆属性
+        {"id": 33, "name": "车辆ID", "type": "string", "required": True, "description": "车辆唯一标识", "modelId": 8, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_id"},
+        {"id": 34, "name": "车牌号", "type": "string", "required": True, "description": "车辆牌照号码", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "license_plate"},
+        {"id": 35, "name": "车型", "type": "string", "required": True, "description": "车辆类型", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(小型客车, 大型客车, 小型货车, 大型货车, 中型客车)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_type"},
+        {"id": 36, "name": "车主姓名", "type": "string", "required": True, "description": "车辆所有人姓名", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "private", "maskRule": "name_last_char", "physicalColumn": "owner_name"},
+        {"id": 37, "name": "车主身份证号", "type": "string", "required": False, "description": "车主身份证号码", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["LENGTH(18)"], "sensitivityLevel": "private", "maskRule": "id_card_middle_8", "physicalColumn": "owner_id_card"},
+        {"id": 38, "name": "车辆颜色", "type": "string", "required": False, "description": "车辆颜色", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": [], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_color"},
+        {"id": 39, "name": "注册日期", "type": "date", "required": False, "description": "车辆注册日期", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": [], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "register_date"},
+        {"id": 40, "name": "车辆状态", "type": "string", "required": True, "description": "车辆状态", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": "正常", "constraints": ["IN(正常, 注销, 报废, 查封)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_status"}
     ],
     # 关系数据 - 使用sourceModelId和targetModelId实现规范化
     "relations": [
@@ -172,9 +182,34 @@ mock_data = {
     
     # 数据源数据
     "datasources": [
-        {"id": 1, "name": "MySQL数据库", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_vehicle", "status": "active", "description": "车辆信息表", "modelId": 8, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
-        {"id": 2, "name": "Oracle数据库", "type": "oracle", "url": "jdbc:oracle:thin:@localhost:1521:ORCL", "tableName": "t_pass_record", "status": "active", "description": "通行记录表", "modelId": 10, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
-        {"id": 3, "name": "Kafka消息队列", "type": "kafka", "url": "localhost:9092", "tableName": "pass_events", "status": "inactive", "description": "通行事件流", "modelId": 10, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"}
+        # 路段业主数据源
+        {"id": 1, "name": "路段业主MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_road_owner", "status": "active", "description": "路段业主信息表", "modelId": 1, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 收费公路数据源
+        {"id": 2, "name": "收费公路MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_toll_road", "status": "active", "description": "收费公路信息表", "modelId": 2, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 收费站数据源
+        {"id": 3, "name": "收费站MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_toll_station", "status": "active", "description": "收费站信息表", "modelId": 3, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        {"id": 15, "name": "收费站Oracle", "type": "oracle", "url": "jdbc:oracle:thin:@localhost:1521:ORCL", "tableName": "toll_station_history", "status": "active", "description": "收费站历史数据表", "modelId": 3, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # ETC门架数据源
+        {"id": 4, "name": "ETC门架MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_etc_gantry", "status": "active", "description": "ETC门架信息表", "modelId": 4, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 收费单元数据源
+        {"id": 5, "name": "收费单元MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_toll_unit", "status": "active", "description": "收费单元信息表", "modelId": 5, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 车道数据源
+        {"id": 6, "name": "车道MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_lane", "status": "active", "description": "车道信息表", "modelId": 6, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 标识点数据源
+        {"id": 7, "name": "标识点MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_marker_point", "status": "active", "description": "标识点信息表", "modelId": 7, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 车辆数据源
+        {"id": 8, "name": "车辆MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_vehicle", "status": "active", "description": "车辆信息表", "modelId": 8, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 通行介质数据源
+        {"id": 9, "name": "通行介质MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_pass_medium", "status": "active", "description": "通行介质信息表", "modelId": 9, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 交易流水数据源
+        {"id": 10, "name": "交易流水Oracle", "type": "oracle", "url": "jdbc:oracle:thin:@localhost:1521:ORCL", "tableName": "t_transaction_record", "status": "active", "description": "交易流水记录表", "modelId": 10, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        {"id": 11, "name": "交易流水Kafka", "type": "kafka", "url": "localhost:9092", "tableName": "transaction_events", "status": "active", "description": "交易流水事件流", "modelId": 10, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 车辆通行路径数据源
+        {"id": 12, "name": "车辆通行路径PostgreSQL", "type": "postgresql", "url": "jdbc:postgresql://localhost:5432/expressway", "tableName": "t_vehicle_path", "status": "active", "description": "车辆通行路径表", "modelId": 11, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 通行拟合路径数据源
+        {"id": 13, "name": "通行拟合路径PostgreSQL", "type": "postgresql", "url": "jdbc:postgresql://localhost:5432/expressway", "tableName": "t_fitted_path", "status": "active", "description": "通行拟合路径表", "modelId": 12, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        # 拆分明细数据源
+        {"id": 14, "name": "拆分明细MySQL", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_split_detail", "status": "active", "description": "拆分明细表", "modelId": 13, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"}
     ],
     
     # 模型绑定的指标
@@ -625,8 +660,20 @@ def unbind_indicator(model_id, indicator_id):
 def get_datasources():
     """获取数据源列表"""
     model_id = request.args.get('modelId')
-    if model_id:
-        return jsonify([d for d in mock_data["datasources"] if d["modelId"] == int(model_id)])
+    print(f"GET /api/datasource - modelId: {model_id}")  # 调试信息
+    
+    if model_id and model_id.strip():
+        try:
+            model_id_int = int(model_id)
+            filtered = [d for d in mock_data["datasources"] if d.get("modelId") == model_id_int]
+            print(f"Filtered datasources for model {model_id_int}: {len(filtered)} found")  # 调试信息
+            return jsonify(filtered)
+        except (ValueError, TypeError) as e:
+            print(f"Error parsing modelId: {e}")  # 调试信息
+            # 如果modelId不是有效整数，返回所有数据源
+            return jsonify(mock_data["datasources"])
+    
+    print(f"Returning all datasources: {len(mock_data['datasources'])} total")  # 调试信息
     return jsonify(mock_data["datasources"])
 
 @app.route('/api/datasource', methods=['POST'])
@@ -710,13 +757,95 @@ def update_property(id):
 def get_data_records():
     """获取模型数据记录"""
     model_id = request.args.get('modelId')
-    # 模拟数据，实际项目中应该根据modelId从数据库获取数据
-    mock_data_records = [
-        {"id": 1, "licensePlate": "京A12345", "vehicleType": "小型客车", "entryTime": "2025-12-19 08:00:00", "exitTime": "2025-12-19 08:30:00", "tollFee": 50.0},
-        {"id": 2, "licensePlate": "沪B67890", "vehicleType": "大型货车", "entryTime": "2025-12-19 08:15:00", "exitTime": "2025-12-19 09:00:00", "tollFee": 120.0},
-        {"id": 3, "licensePlate": "粤C54321", "vehicleType": "小型客车", "entryTime": "2025-12-19 08:30:00", "exitTime": "2025-12-19 09:15:00", "tollFee": 80.0}
-    ]
-    return jsonify(mock_data_records)
+    if not model_id or not model_id.strip():
+        return jsonify([])
+    
+    try:
+        model_id = int(model_id)
+    except (ValueError, TypeError):
+        return jsonify([])
+    
+    # 根据模型ID返回对应的模拟数据
+    mock_data_by_model = {
+        1: [  # 路段业主
+            {"id": 1, "owner_id": "OWNER001", "owner_name": "京沪高速公路有限公司", "contact_info": "010-12345678"},
+            {"id": 2, "owner_id": "OWNER002", "owner_name": "沪宁高速公路管理公司", "contact_info": "021-87654321"},
+            {"id": 3, "owner_id": "OWNER003", "owner_name": "广深高速公路股份公司", "contact_info": "020-11223344"}
+        ],
+        2: [  # 收费公路
+            {"id": 1, "road_id": "ROAD001", "road_name": "京沪高速", "owner_id": "OWNER001", "road_level": "高速", "start_mileage": 0, "end_mileage": 1200},
+            {"id": 2, "road_id": "ROAD002", "road_name": "沪宁高速", "owner_id": "OWNER002", "road_level": "高速", "start_mileage": 0, "end_mileage": 274},
+            {"id": 3, "road_id": "ROAD003", "road_name": "广深高速", "owner_id": "OWNER003", "road_level": "高速", "start_mileage": 0, "end_mileage": 122.8}
+        ],
+        3: [  # 收费站
+            {"id": 1, "station_id": "STATION001", "station_name": "北京收费站", "road_id": "ROAD001", "station_type": "主线站"},
+            {"id": 2, "station_id": "STATION002", "station_name": "上海收费站", "road_id": "ROAD001", "station_type": "主线站"},
+            {"id": 3, "station_id": "STATION003", "station_name": "南京收费站", "road_id": "ROAD002", "station_type": "主线站"},
+            {"id": 4, "station_id": "STATION004", "station_name": "天津收费站", "road_id": "ROAD001", "station_type": "匝道站"},
+            {"id": 5, "station_id": "STATION005", "station_name": "苏州收费站", "road_id": "ROAD002", "station_type": "主线站"},
+            {"id": 6, "station_id": "STATION006", "station_name": "无锡收费站", "road_id": "ROAD002", "station_type": "匝道站"}
+        ],
+        4: [  # ETC门架
+            {"id": 1, "gantry_id": "GANTRY001", "gantry_name": "京沪高速K100门架", "road_id": "ROAD001", "gantry_location": "K100+500", "gantry_status": "正常"},
+            {"id": 2, "gantry_id": "GANTRY002", "gantry_name": "京沪高速K200门架", "road_id": "ROAD001", "gantry_location": "K200+300", "gantry_status": "正常"},
+            {"id": 3, "gantry_id": "GANTRY003", "gantry_name": "沪宁高速K50门架", "road_id": "ROAD002", "gantry_location": "K50+200", "gantry_status": "正常"}
+        ],
+        5: [  # 收费单元
+            {"id": 1, "toll_unit_id": "UNIT001", "toll_unit_name": "京沪高速收费单元1", "road_id": "ROAD001", "toll_type": "ETC"},
+            {"id": 2, "toll_unit_id": "UNIT002", "toll_unit_name": "京沪高速收费单元2", "road_id": "ROAD001", "toll_type": "混合"},
+            {"id": 3, "toll_unit_id": "UNIT003", "toll_unit_name": "沪宁高速收费单元1", "road_id": "ROAD002", "toll_type": "ETC"}
+        ],
+        6: [  # 车道
+            {"id": 1, "lane_id": "LANE001", "lane_number": "1", "station_id": "STATION001", "lane_type": "ETC", "lane_status": "正常"},
+            {"id": 2, "lane_id": "LANE002", "lane_number": "2", "station_id": "STATION001", "lane_type": "人工", "lane_status": "正常"},
+            {"id": 3, "lane_id": "LANE003", "lane_number": "3", "station_id": "STATION001", "lane_type": "混合", "lane_status": "正常"},
+            {"id": 4, "lane_id": "LANE004", "lane_number": "1", "station_id": "STATION002", "lane_type": "ETC", "lane_status": "正常"}
+        ],
+        7: [  # 标识点
+            {"id": 1, "marker_id": "MARKER001", "marker_name": "北京入口标识点", "longitude": 116.4074, "latitude": 39.9042, "marker_type": "入口"},
+            {"id": 2, "marker_id": "MARKER002", "marker_name": "京沪高速K100标识点", "longitude": 116.5000, "latitude": 39.9000, "marker_type": "中间点"},
+            {"id": 3, "marker_id": "MARKER003", "marker_name": "上海出口标识点", "longitude": 121.4737, "latitude": 31.2304, "marker_type": "出口"},
+            {"id": 4, "marker_id": "MARKER004", "marker_name": "南京入口标识点", "longitude": 118.7969, "latitude": 32.0603, "marker_type": "入口"}
+        ],
+        8: [  # 车辆
+            {"id": 1, "vehicle_id": "VEH001", "license_plate": "京A12345", "vehicle_type": "小型客车", "owner_name": "张三"},
+            {"id": 2, "vehicle_id": "VEH002", "license_plate": "沪B67890", "vehicle_type": "大型货车", "owner_name": "李四"},
+            {"id": 3, "vehicle_id": "VEH003", "license_plate": "粤C54321", "vehicle_type": "小型客车", "owner_name": "王五"},
+            {"id": 4, "vehicle_id": "VEH004", "license_plate": "苏D98765", "vehicle_type": "中型客车", "owner_name": "赵六"}
+        ],
+        9: [  # 通行介质
+            {"id": 1, "medium_id": "MEDIUM001", "medium_type": "ETC卡", "vehicle_id": "VEH001", "card_number": "6217000010001234567", "balance": 500.0},
+            {"id": 2, "medium_id": "MEDIUM002", "medium_type": "ETC卡", "vehicle_id": "VEH002", "card_number": "6217000010002345678", "balance": 1000.0},
+            {"id": 3, "medium_id": "MEDIUM003", "medium_type": "ETC卡", "vehicle_id": "VEH003", "card_number": "6217000010003456789", "balance": 300.0},
+            {"id": 4, "medium_id": "MEDIUM004", "medium_type": "ETC卡", "vehicle_id": "VEH004", "card_number": "6217000010004567890", "balance": 800.0}
+        ],
+        10: [  # 交易流水
+            {"id": 1, "transaction_id": "TXN001", "vehicle_id": "VEH001", "marker_id": "MARKER001", "transaction_time": "2025-12-19 08:00:00", "amount": 50.0, "status": "成功"},
+            {"id": 2, "transaction_id": "TXN002", "vehicle_id": "VEH002", "marker_id": "MARKER002", "transaction_time": "2025-12-19 08:15:00", "amount": 120.0, "status": "成功"},
+            {"id": 3, "transaction_id": "TXN003", "vehicle_id": "VEH003", "marker_id": "MARKER003", "transaction_time": "2025-12-19 08:30:00", "amount": 80.0, "status": "成功"},
+            {"id": 4, "transaction_id": "TXN004", "vehicle_id": "VEH001", "marker_id": "MARKER002", "transaction_time": "2025-12-19 09:00:00", "amount": 60.0, "status": "成功"},
+            {"id": 5, "transaction_id": "TXN005", "vehicle_id": "VEH004", "marker_id": "MARKER004", "transaction_time": "2025-12-19 09:15:00", "amount": 45.0, "status": "成功"}
+        ],
+        11: [  # 车辆通行路径
+            {"id": 1, "path_id": "PATH001", "vehicle_id": "VEH001", "start_marker": "MARKER001", "end_marker": "MARKER003", "path_length": 1200.5, "create_time": "2025-12-19 08:30:00"},
+            {"id": 2, "path_id": "PATH002", "vehicle_id": "VEH002", "start_marker": "MARKER002", "end_marker": "MARKER003", "path_length": 800.3, "create_time": "2025-12-19 09:00:00"},
+            {"id": 3, "path_id": "PATH003", "vehicle_id": "VEH003", "start_marker": "MARKER003", "end_marker": "MARKER004", "path_length": 274.2, "create_time": "2025-12-19 09:15:00"}
+        ],
+        12: [  # 通行拟合路径
+            {"id": 1, "fitted_path_id": "FITTED001", "path_id": "PATH001", "fitted_length": 1200.0, "fitted_time": "2025-12-19 08:30:00", "accuracy": 0.95},
+            {"id": 2, "fitted_path_id": "FITTED002", "path_id": "PATH002", "fitted_length": 800.0, "fitted_time": "2025-12-19 09:00:00", "accuracy": 0.92},
+            {"id": 3, "fitted_path_id": "FITTED003", "path_id": "PATH003", "fitted_length": 274.0, "fitted_time": "2025-12-19 09:15:00", "accuracy": 0.98}
+        ],
+        13: [  # 拆分明细
+            {"id": 1, "split_id": "SPLIT001", "fitted_path_id": "FITTED001", "toll_unit_id": "UNIT001", "split_amount": 30.0, "split_ratio": 0.6, "split_time": "2025-12-19 08:35:00"},
+            {"id": 2, "split_id": "SPLIT002", "fitted_path_id": "FITTED001", "toll_unit_id": "UNIT002", "split_amount": 20.0, "split_ratio": 0.4, "split_time": "2025-12-19 08:35:00"},
+            {"id": 3, "split_id": "SPLIT003", "fitted_path_id": "FITTED002", "toll_unit_id": "UNIT001", "split_amount": 80.0, "split_ratio": 0.67, "split_time": "2025-12-19 09:05:00"},
+            {"id": 4, "split_id": "SPLIT004", "fitted_path_id": "FITTED002", "toll_unit_id": "UNIT002", "split_amount": 40.0, "split_ratio": 0.33, "split_time": "2025-12-19 09:05:00"},
+            {"id": 5, "split_id": "SPLIT005", "fitted_path_id": "FITTED003", "toll_unit_id": "UNIT003", "split_amount": 274.0, "split_ratio": 1.0, "split_time": "2025-12-19 09:20:00"}
+        ]
+    }
+    
+    return jsonify(mock_data_by_model.get(model_id, []))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

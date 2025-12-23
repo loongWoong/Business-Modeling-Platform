@@ -7,6 +7,7 @@ import RelationModal from './components/RelationModal';
 import DatasourceModal from './components/DatasourceModal';
 import DataModal from './components/DataModal';
 import IndicatorModal from './components/IndicatorModal';
+import MappingModal from './components/MappingModal';
 import PropertyManager from './modules/PropertyManager';
 import RelationManager from './modules/RelationManager';
 import SharedAttributeReference from './modules/SharedAttributeReference';
@@ -93,6 +94,10 @@ const ModelDetail = () => {
     status: 'inactive',
     description: ''
   });
+  
+  // 映射模态框相关状态
+  const [isMappingModalOpen, setIsMappingModalOpen] = useState(false);
+  const [mappingDatasource, setMappingDatasource] = useState(null);
   
   // 数据相关状态
   const [dataRecords, setDataRecords] = useState([]);
@@ -428,11 +433,22 @@ const ModelDetail = () => {
     
     // 获取数据源数据
     fetch(`/api/datasource?modelId=${modelId}`)
-      .then(response => response.json())
-      .then(datasourceData => {
-        setDatasources(datasourceData);
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
       })
-      .catch(error => console.error('Failed to fetch datasources:', error));
+      .then(datasourceData => {
+        // 确保返回的是数组
+        const dataArray = Array.isArray(datasourceData) ? datasourceData : [];
+        console.log(`Fetched datasources for model ${modelId}:`, dataArray);
+        setDatasources(dataArray);
+      })
+      .catch(error => {
+        console.error('Failed to fetch datasources:', error);
+        setDatasources([]);
+      });
     
     // 获取模型绑定的指标
     fetch(`/api/model/${modelId}/indicator`)
@@ -577,6 +593,10 @@ const ModelDetail = () => {
             setEditingDatasource={setEditingDatasource}
             newDatasource={newDatasource}
             setNewDatasource={setNewDatasource}
+            onMappingClick={(datasource) => {
+              setMappingDatasource(datasource);
+              setIsMappingModalOpen(true);
+            }}
           />
         )}
 
@@ -811,10 +831,14 @@ const ModelDetail = () => {
               });
           } else {
             // 创建数据源
+            const datasourceData = {
+              ...newDatasource,
+              modelId: parseInt(modelId)
+            };
             fetch('/api/datasource', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newDatasource)
+              body: JSON.stringify(datasourceData)
             })
               .then(response => response.json())
               .then(datasource => {
@@ -989,6 +1013,19 @@ const ModelDetail = () => {
               });
           }
         }}
+      />
+      
+      {/* 映射模态框 */}
+      <MappingModal
+        isOpen={isMappingModalOpen}
+        onClose={() => {
+          setIsMappingModalOpen(false);
+          setMappingDatasource(null);
+        }}
+        datasource={mappingDatasource}
+        model={model}
+        modelProperties={properties}
+        modelId={modelId}
       />
       
       {/* 确认对话框 */}

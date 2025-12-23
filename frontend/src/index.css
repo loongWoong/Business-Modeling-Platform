@@ -1023,13 +1023,37 @@ body {
   box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
 }
 
-.data-table td button:not(.edit):not(.delete):not(.toggle) {
+.data-table td button.mapping {
+  background: var(--warning-color);
+  color: white;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.data-table td button.mapping:hover {
+  background: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.data-table td button.test {
   background: var(--primary-color);
   color: white;
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
-.data-table td button:not(.edit):not(.delete):not(.toggle):hover {
+.data-table td button.test:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.data-table td button:not(.edit):not(.delete):not(.toggle):not(.mapping):not(.test) {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.data-table td button:not(.edit):not(.delete):not(.toggle):not(.mapping):not(.test):hover {
   background: var(--primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);

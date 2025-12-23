@@ -10,7 +10,8 @@ const DatasourceManager = ({
   editingDatasource, 
   setEditingDatasource, 
   newDatasource, 
-  setNewDatasource 
+  setNewDatasource,
+  onMappingClick
 }) => {
   // 处理创建数据源
   const handleCreateDatasource = () => {
@@ -157,25 +158,34 @@ const DatasourceManager = ({
             </tr>
           </thead>
           <tbody>
-            {datasources.map(datasource => (
-              <tr key={datasource.id}>
-                <td>{datasource.name}</td>
-                <td>{datasource.type}</td>
-                <td>{datasource.url}</td>
-                <td>{datasource.tableName}</td>
-                <td>
-                  <span className={`status-badge ${datasource.status}`}>
-                    {datasource.status === 'active' ? '活跃' : '非活跃'}
-                  </span>
-                </td>
-                <td>{datasource.description}</td>
-                <td>
-                  <button className="edit" onClick={() => handleEditDatasource(datasource)}>编辑</button>
-                  <button className="test" onClick={() => handleTestConnection(datasource)}>测试</button>
-                  <button className="delete" onClick={() => handleDeleteDatasource(datasource.id)}>删除</button>
+            {datasources && datasources.length > 0 ? (
+              datasources.map(datasource => (
+                <tr key={datasource.id}>
+                  <td>{datasource.name}</td>
+                  <td>{datasource.type}</td>
+                  <td>{datasource.url}</td>
+                  <td>{datasource.tableName}</td>
+                  <td>
+                    <span className={`status-badge ${datasource.status}`}>
+                      {datasource.status === 'active' ? '活跃' : '非活跃'}
+                    </span>
+                  </td>
+                  <td>{datasource.description}</td>
+                  <td>
+                    <button className="edit" onClick={() => handleEditDatasource(datasource)}>编辑</button>
+                    <button className="test" onClick={() => handleTestConnection(datasource)}>测试</button>
+                    <button className="mapping" onClick={() => onMappingClick && onMappingClick(datasource)}>映射</button>
+                    <button className="delete" onClick={() => handleDeleteDatasource(datasource.id)}>删除</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                  暂无数据源
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
