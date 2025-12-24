@@ -44,6 +44,38 @@ def get_datasources():
     finally:
         conn.close()
 
+@datasource_bp.route('/<int:id>', methods=['GET'])
+def get_datasource(id):
+    """获取单个数据源详情"""
+    conn = get_db_connection()
+    try:
+        # 查询数据源
+        datasource = conn.execute("SELECT * FROM datasources WHERE id = ?", (id,)).fetchone()
+        
+        if not datasource:
+            return jsonify({"error": "Datasource not found"}), 404
+        
+        # 转换为字典
+        result = {
+            "id": datasource[0],
+            "name": datasource[1],
+            "type": datasource[2],
+            "url": datasource[3],
+            "username": datasource[4],
+            "password": datasource[5],
+            "tableName": datasource[6],
+            "status": datasource[7],
+            "description": datasource[8],
+            "modelId": datasource[9],
+            "domainId": datasource[10],
+            "createdAt": datasource[11],
+            "updatedAt": datasource[12]
+        }
+        
+        return jsonify(result)
+    finally:
+        conn.close()
+
 @datasource_bp.route('', methods=['POST'])
 def create_datasource():
     """新建数据源"""
@@ -282,5 +314,113 @@ def save_datasource_mappings(id):
                 )
         
         return jsonify({"message": "Mapping saved successfully", "success": True})
+    finally:
+        conn.close()
+
+
+# 模型-数据源表关联相关路由
+@datasource_bp.route('/associations', methods=['GET'])
+def get_model_table_associations():
+    """获取模型-数据源表关联列表"""
+    model_id = request.args.get('modelId')
+    conn = get_db_connection()
+    try:
+        if model_id and model_id.strip():
+            try:
+                model_id_int = int(model_id)
+                # 查询指定模型的关联表
+                associations = conn.execute(
+                    "SELECT a.*, d.name as datasourceName, d.type as datasourceType, d.url as datasourceUrl "
+                    "FROM model_table_associations a "
+                    "JOIN datasources d ON a.datasourceId = d.id "
+                    "WHERE a.modelId = ?", 
+                    (model_id_int,)
+                ).fetchall()
+            except (ValueError, TypeError) as e:
+                # 如果modelId不是有效整数，返回所有关联
+                associations = conn.execute(
+                    "SELECT a.*, d.name as datasourceName, d.type as datasourceType, d.url as datasourceUrl "
+                    "FROM model_table_associations a "
+                    "JOIN datasources d ON a.datasourceId = d.id "
+                ).fetchall()
+        else:
+            # 返回所有关联
+            associations = conn.execute(
+                "SELECT a.*, d.name as datasourceName, d.type as datasourceType, d.url as datasourceUrl "
+                "FROM model_table_associations a "
+                "JOIN datasources d ON a.datasourceId = d.id "
+            ).fetchall()
+        
+        # 转换为字典列表
+        result = []
+        for row in associations:
+            result.append({
+                "id": row[0],
+                "modelId": row[1],
+                "datasourceId": row[2],
+                "tableName": row[3],
+                "status": row[4],
+                "createdAt": row[5],
+                "updatedAt": row[6],
+                "datasourceName": row[7],
+                "datasourceType": row[8],
+                "datasourceUrl": row[9]
+            })
+        
+        return jsonify(result)
+    finally:
+        conn.close()
+
+@datasource_bp.route('/associations', methods=['POST'])
+def create_model_table_association():
+    """创建模型-数据源表关联"""
+    data = request.get_json()
+    conn = get_db_connection()
+    try:
+        model_id = data.get("modelId")
+        datasource_id = data.get("datasourceId")
+        table_name = data.get("tableName")
+        
+        if not model_id or not datasource_id or not table_name:
+            return jsonify({"error": "modelId, datasourceId, and tableName are required"}), 400
+        
+        model_id_int = int(model_id)
+        datasource_id_int = int(datasource_id)
+        
+        # 获取下一个ID
+        next_id = conn.execute(
+            "SELECT COALESCE(MAX(id), 0) + 1 FROM model_table_associations"
+        ).fetchone()[0]
+        
+        # 插入新关联
+        conn.execute(
+            "INSERT INTO model_table_associations (id, modelId, datasourceId, tableName, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (next_id, model_id_int, datasource_id_int, table_name, 
+             data.get("status", "active"), 
+             get_current_date(), get_current_date())
+        )
+        
+        # 返回新创建的关联
+        new_association = {
+            "id": next_id,
+            "modelId": model_id_int,
+            "datasourceId": datasource_id_int,
+            "tableName": table_name,
+            "status": data.get("status", "active"),
+            "createdAt": get_current_date(),
+            "updatedAt": get_current_date()
+        }
+        return jsonify(new_association), 201
+    finally:
+        conn.close()
+
+@datasource_bp.route('/associations/<int:id>', methods=['DELETE'])
+def delete_model_table_association(id):
+    """删除模型-数据源表关联"""
+    conn = get_db_connection()
+    try:
+        # 删除关联
+        conn.execute("DELETE FROM model_table_associations WHERE id = ?", (id,))
+        return jsonify({"message": "Association deleted", "success": True})
     finally:
         conn.close()

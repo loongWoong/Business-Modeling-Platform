@@ -47,7 +47,6 @@ const DatasourceManager = ({
               <th>名称</th>
               <th>类型</th>
               <th>URL</th>
-              <th>表名</th>
               <th>状态</th>
               <th>描述</th>
               <th>操作</th>
@@ -68,7 +67,6 @@ const DatasourceManager = ({
                   </td>
                   <td>{datasource.type}</td>
                   <td><code>{datasource.url}</code></td>
-                  <td>{datasource.tableName}</td>
                   <td>
                     <span className={`status-badge ${datasource.status === 'active' ? 'active' : 'inactive'}`}>
                       {datasource.status === 'active' ? '启用' : '禁用'}
@@ -95,7 +93,7 @@ const DatasourceManager = ({
               ))
             ) : (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
                   未找到数据源
                 </td>
               </tr>

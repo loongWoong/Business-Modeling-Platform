@@ -654,6 +654,21 @@ def create_tables(conn):
     )
     """)
     
+    # 创建模型表关联表
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS model_table_associations (
+        id INTEGER PRIMARY KEY,
+        modelId INTEGER NOT NULL,
+        datasourceId INTEGER NOT NULL,
+        tableName VARCHAR(100) NOT NULL,
+        status VARCHAR(50) DEFAULT 'active',
+        createdAt DATE,
+        updatedAt DATE,
+        FOREIGN KEY (modelId) REFERENCES models(id),
+        FOREIGN KEY (datasourceId) REFERENCES datasources(id)
+    )
+    """)
+    
     print("数据库表创建完成")
 
 def insert_data(conn, data):

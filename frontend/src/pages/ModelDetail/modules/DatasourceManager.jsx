@@ -104,20 +104,24 @@ const DatasourceManager = ({
     }
   };
 
-  // 处理删除数据源
-  const handleDeleteDatasource = (id) => {
+  // 处理删除数据源关联
+  const handleDeleteDatasource = (id, associationId) => {
     showConfirmDialog(
       '删除确认',
-      '确定要删除该数据源吗？删除后无法恢复。',
+      '确定要删除该表关联吗？删除后无法恢复。',
       () => {
-        fetch(`/api/datasource/${id}`, { method: 'DELETE' })
+        // 使用关联ID删除，如果没有则使用数据源ID
+        const deleteId = associationId || id;
+        const deleteUrl = associationId ? `/api/datasource/associations/${deleteId}` : `/api/datasource/${deleteId}`;
+        
+        fetch(deleteUrl, { method: 'DELETE' })
           .then(() => {
-            setDatasources(datasources.filter(datasource => datasource.id !== id));
-            showNotification('数据源删除成功');
+            setDatasources(datasources.filter(datasource => datasource.associationId !== deleteId && datasource.id !== deleteId));
+            showNotification(associationId ? '表关联删除成功' : '数据源删除成功');
           })
           .catch(error => {
-            console.error('Failed to delete datasource:', error);
-            showNotification('数据源删除失败', 'error');
+            console.error('Failed to delete datasource association:', error);
+            showNotification('删除失败：' + error.message, 'error');
           });
       }
     );
@@ -223,7 +227,7 @@ const DatasourceManager = ({
                     <button className="edit" onClick={() => handleEditDatasource(datasource)}>编辑</button>
                     <button className="test" onClick={() => handleTestConnection(datasource)}>测试</button>
                     <button className="mapping" onClick={() => onMappingClick && onMappingClick(datasource)}>映射</button>
-                    <button className="delete" onClick={() => handleDeleteDatasource(datasource.id)}>删除</button>
+                    <button className="delete" onClick={() => handleDeleteDatasource(datasource.id, datasource.associationId)}>删除</button>
                   </td>
                 </tr>
               ))
@@ -428,23 +432,34 @@ const DatasourceManager = ({
                                   onClick={() => {
                                     // 关联表逻辑：将选中的表关联到当前模型
                                     const newAssociation = {
-                                      ...selectedDomainDatasource,
-                                      tableName: table.name,
                                       modelId: parseInt(modelId),
-                                      domainId: selectedDomainDatasource.domainId,
+                                      datasourceId: selectedDomainDatasource.id,
+                                      tableName: table.name,
                                       status: 'active'
                                     };
                                     
-                                    // 调用API保存到数据库
-                                    fetch('/api/datasource', {
+                                    // 调用新的数据源关联API保存到数据库
+                                    fetch('/api/datasource/associations', {
                                       method: 'POST',
                                       headers: { 'Content-Type': 'application/json' },
                                       body: JSON.stringify(newAssociation)
                                     })
                                       .then(response => response.json())
-                                      .then(savedDatasource => {
+                                      .then(savedAssociation => {
+                                        // 创建兼容现有数据源列表的对象
+                                        const associationWithDetails = {
+                                          id: savedAssociation.id,
+                                          name: selectedDomainDatasource.name,
+                                          type: selectedDomainDatasource.type,
+                                          url: selectedDomainDatasource.url,
+                                          tableName: savedAssociation.tableName,
+                                          status: savedAssociation.status,
+                                          description: selectedDomainDatasource.description,
+                                          modelId: savedAssociation.modelId,
+                                          domainId: selectedDomainDatasource.domainId
+                                        };
                                         // 添加到当前模型的数据源列表
-                                        setDatasources([...datasources, savedDatasource]);
+                                        setDatasources([...datasources, associationWithDetails]);
                                         showNotification(`成功关联表 "${table.name}"`);
                                         setIsTableAssociationModalOpen(false);
                                       })

@@ -16,6 +16,7 @@ from routes.datasource_routes import datasource_bp
 from routes.function_routes import function_bp
 from routes.action_type_routes import action_type_bp
 from routes.data_routes import data_bp
+from routes.model_table_association_routes import model_table_association_bp
 
 # 注册蓝图
 app.register_blueprint(domain_bp, url_prefix='/api/domain')
@@ -28,6 +29,7 @@ app.register_blueprint(datasource_bp, url_prefix='/api/datasource')
 app.register_blueprint(function_bp, url_prefix='/api/function')
 app.register_blueprint(action_type_bp, url_prefix='/api/action-type')
 app.register_blueprint(data_bp, url_prefix='/api/data')
+app.register_blueprint(model_table_association_bp, url_prefix='/api/model-table-associations')
 
 # 健康检查端点
 @app.route('/health', methods=['GET'])

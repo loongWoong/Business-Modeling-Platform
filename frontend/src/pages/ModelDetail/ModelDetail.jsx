@@ -454,22 +454,36 @@ const ModelDetail = () => {
       })
       .catch(error => console.error('Failed to fetch relation types:', error));
     
-    // 获取数据源数据
-    fetch(`/api/datasource?modelId=${modelId}`)
+    // 获取模型-数据源表关联数据
+    fetch(`/api/datasource/associations?modelId=${modelId}`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })
-      .then(datasourceData => {
+      .then(associationData => {
         // 确保返回的是数组
-        const dataArray = Array.isArray(datasourceData) ? datasourceData : [];
-        console.log(`Fetched datasources for model ${modelId}:`, dataArray);
-        setDatasources(dataArray);
+        const dataArray = Array.isArray(associationData) ? associationData : [];
+        console.log(`Fetched datasource associations for model ${modelId}:`, dataArray);
+        
+        // 转换关联数据格式，使其与原有datasources格式兼容
+        const compatibleDatasources = dataArray.map(assoc => ({
+          id: assoc.id,
+          name: assoc.datasourceName,
+          type: assoc.datasourceType,
+          url: assoc.datasourceUrl,
+          tableName: assoc.tableName,
+          status: assoc.status,
+          description: '', // 关联表没有description字段，设为空字符串
+          modelId: assoc.modelId,
+          domainId: 0 // 暂时设为0，实际应该从数据源获取
+        }));
+        
+        setDatasources(compatibleDatasources);
       })
       .catch(error => {
-        console.error('Failed to fetch datasources:', error);
+        console.error('Failed to fetch datasource associations:', error);
         setDatasources([]);
       });
     
