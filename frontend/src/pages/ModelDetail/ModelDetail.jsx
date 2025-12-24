@@ -546,11 +546,11 @@ const ModelDetail = () => {
           关系
         </button>
         <button
-          className={activeTab === 'datasource' ? 'active' : ''}
-          onClick={() => setActiveTab('datasource')}
-        >
-          数据源
-        </button>
+            className={activeTab === 'datasource' ? 'active' : ''}
+            onClick={() => setActiveTab('datasource')}
+          >
+            关联数据源
+          </button>
         <button
           className={activeTab === 'data' ? 'active' : ''}
           onClick={() => setActiveTab('data')}

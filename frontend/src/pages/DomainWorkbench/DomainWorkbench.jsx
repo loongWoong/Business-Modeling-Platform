@@ -12,6 +12,8 @@ import ModelModal from './components/ModelModal';
 import SharedAttributeModal from './components/SharedAttributeModal';
 import RelationModal from './components/RelationModal';
 import SemanticIndicatorModal from './components/SemanticIndicatorModal';
+import DatasourceModal from './components/DatasourceModal';
+import DatasourceManager from './modules/DatasourceManager';
 
 const DomainWorkbench = () => {
   const { domainId } = useParams();
@@ -75,6 +77,19 @@ const DomainWorkbench = () => {
   const [attributeViewMode, setAttributeViewMode] = useState('card');
   const [relationViewMode, setRelationViewMode] = useState('card');
   const [indicatorViewMode, setIndicatorViewMode] = useState('card');
+  
+  // 数据源管理相关状态
+  const [datasources, setDatasources] = useState([]);
+  const [isDatasourceModalOpen, setIsDatasourceModalOpen] = useState(false);
+  const [editingDatasource, setEditingDatasource] = useState(null);
+  const [newDatasource, setNewDatasource] = useState({
+    name: '',
+    type: 'mysql',
+    url: '',
+    tableName: '',
+    status: 'inactive',
+    description: ''
+  });
 
   // 显示通知
   const showNotification = (message, type = 'success') => {
@@ -147,6 +162,14 @@ const DomainWorkbench = () => {
         setSemanticIndicators(indicatorData);
       })
       .catch(error => console.error('Failed to fetch indicators:', error));
+    
+    // 从后端API获取数据源数据
+    fetch('/api/datasource')
+      .then(response => response.json())
+      .then(datasourceData => {
+        setDatasources(datasourceData);
+      })
+      .catch(error => console.error('Failed to fetch datasources:', error));
   }, [domainId]);
 
   // 处理新建模型
@@ -670,6 +693,97 @@ const DomainWorkbench = () => {
         showNotification('指标复制失败', 'error');
       });
   };
+  
+  // 数据源管理处理函数
+  const handleCreateDatasource = () => {
+    fetch('/api/datasource', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newDatasource, domainId: parseInt(domainId) })
+    })
+      .then(response => response.json())
+      .then(datasource => {
+        setDatasources([...datasources, datasource]);
+        setIsDatasourceModalOpen(false);
+        setNewDatasource({ name: '', type: 'mysql', url: '', tableName: '', status: 'inactive', description: '' });
+        showNotification('数据源创建成功');
+      })
+      .catch(error => {
+        console.error('Failed to create datasource:', error);
+        showNotification('数据源创建失败', 'error');
+      });
+  };
+  
+  const handleEditDatasource = (datasource) => {
+    setEditingDatasource(datasource);
+    setNewDatasource(datasource);
+    setIsDatasourceModalOpen(true);
+  };
+  
+  const handleUpdateDatasource = () => {
+    fetch(`/api/datasource/${editingDatasource.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newDatasource)
+    })
+      .then(response => response.json())
+      .then(updatedDatasource => {
+        setDatasources(datasources.map(datasource => 
+          datasource.id === editingDatasource.id ? updatedDatasource : datasource
+        ));
+        setIsDatasourceModalOpen(false);
+        setEditingDatasource(null);
+        setNewDatasource({ name: '', type: 'mysql', url: '', tableName: '', status: 'inactive', description: '' });
+        showNotification('数据源更新成功');
+      })
+      .catch(error => {
+        console.error('Failed to update datasource:', error);
+        showNotification('数据源更新失败', 'error');
+      });
+  };
+  
+  const handleDeleteDatasource = (id) => {
+    showConfirmDialog(
+      '删除确认',
+      '确定要删除该数据源吗？删除后无法恢复。',
+      () => {
+        fetch(`/api/datasource/${id}`, { method: 'DELETE' })
+          .then(() => {
+            setDatasources(datasources.filter(datasource => datasource.id !== id));
+            showNotification('数据源删除成功');
+            closeConfirmDialog();
+          })
+          .catch(error => {
+            console.error('Failed to delete datasource:', error);
+            showNotification('数据源删除失败', 'error');
+            closeConfirmDialog();
+          });
+      }
+    );
+  };
+  
+  const handleToggleDatasource = (id) => {
+    fetch(`/api/datasource/${id}/toggle`, { method: 'PUT' })
+      .then(response => response.json())
+      .then(updatedDatasource => {
+        setDatasources(datasources.map(datasource => 
+          datasource.id === id ? updatedDatasource : datasource
+        ));
+        showNotification(updatedDatasource.status === 'active' ? '数据源已启用' : '数据源已禁用');
+      })
+      .catch(error => {
+        console.error('Failed to toggle datasource:', error);
+        showNotification('操作失败', 'error');
+      });
+  };
+  
+  const handleSaveDatasource = () => {
+    if (editingDatasource) {
+      handleUpdateDatasource();
+    } else {
+      handleCreateDatasource();
+    }
+  };
 
   // 过滤模型
   const filteredModels = models.filter(model =>
@@ -728,6 +842,12 @@ const DomainWorkbench = () => {
         >
           语义/指标
         </button>
+        <button
+            className={activeTab === 'datasource-mgr' ? 'active' : ''}
+            onClick={() => setActiveTab('datasource-mgr')}
+          >
+            绑定数据源管理
+          </button>
       </div>
 
       {/* 内容区域 */}
@@ -819,6 +939,21 @@ const DomainWorkbench = () => {
             setViewMode={setIndicatorViewMode}
           />
         )}
+
+        {/* 数据源管理 */}
+        {activeTab === 'datasource-mgr' && (
+          <DatasourceManager 
+            datasources={datasources}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            handleEditDatasource={handleEditDatasource}
+            handleDeleteDatasource={handleDeleteDatasource}
+            handleToggleDatasource={handleToggleDatasource}
+            setIsDatasourceModalOpen={setIsDatasourceModalOpen}
+            setEditingDatasource={setEditingDatasource}
+            setNewDatasource={setNewDatasource}
+          />
+        )}
       </div>
 
       {/* 悬停抽屉 */}
@@ -873,6 +1008,17 @@ const DomainWorkbench = () => {
         handleSaveIndicator={handleSaveIndicator}
         setIsIndicatorModalOpen={setIsIndicatorModalOpen}
         setEditingIndicator={setEditingIndicator}
+      />
+      
+      {/* 新建/编辑数据源模态框 */}
+      <DatasourceModal 
+        isDatasourceModalOpen={isDatasourceModalOpen}
+        editingDatasource={editingDatasource}
+        newDatasource={newDatasource}
+        setNewDatasource={setNewDatasource}
+        handleSaveDatasource={handleSaveDatasource}
+        setIsDatasourceModalOpen={setIsDatasourceModalOpen}
+        setEditingDatasource={setEditingDatasource}
       />
     </div>
   );
