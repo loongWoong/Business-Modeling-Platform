@@ -99,6 +99,15 @@ const ModelDetail = () => {
     description: ''
   });
   
+  // 业务域数据源列表状态（用于选择关联表）
+  const [domainDatasources, setDomainDatasources] = useState([]);
+  // 关联表选择模态框状态
+  const [isTableAssociationModalOpen, setIsTableAssociationModalOpen] = useState(false);
+  // 当前选择的数据源
+  const [selectedDomainDatasource, setSelectedDomainDatasource] = useState(null);
+  // 当前数据源下的表列表
+  const [tablesInDatasource, setTablesInDatasource] = useState([]);
+  
   // 映射模态框相关状态
   const [isMappingModalOpen, setIsMappingModalOpen] = useState(false);
   const [mappingDatasource, setMappingDatasource] = useState(null);
@@ -461,6 +470,20 @@ const ModelDetail = () => {
         setDatasources([]);
       });
     
+    // 获取业务域数据源列表（用于选择关联表）
+    fetch('/api/datasource')
+      .then(response => response.json())
+      .then(datasourceData => {
+        // 确保返回的是数组
+        const dataArray = Array.isArray(datasourceData) ? datasourceData : [];
+        console.log(`Fetched all datasources for domain:`, dataArray);
+        setDomainDatasources(dataArray);
+      })
+      .catch(error => {
+        console.error('Failed to fetch domain datasources:', error);
+        setDomainDatasources([]);
+      });
+    
     // 获取模型绑定的指标
     fetch(`/api/model/${modelId}/indicator`)
       .then(response => response.json())
@@ -549,7 +572,7 @@ const ModelDetail = () => {
             className={activeTab === 'datasource' ? 'active' : ''}
             onClick={() => setActiveTab('datasource')}
           >
-            关联数据源
+            关联表
           </button>
         <button
           className={activeTab === 'data' ? 'active' : ''}
@@ -631,7 +654,7 @@ const ModelDetail = () => {
           />
         )}
 
-        {/* 数据源Tab */}
+        {/* 关联表Tab */}
         {activeTab === 'datasource' && (
           <DatasourceManager 
             datasources={datasources}
@@ -648,6 +671,14 @@ const ModelDetail = () => {
               setMappingDatasource(datasource);
               setIsMappingModalOpen(true);
             }}
+            // 新增关联表功能相关属性
+            domainDatasources={domainDatasources}
+            isTableAssociationModalOpen={isTableAssociationModalOpen}
+            setIsTableAssociationModalOpen={setIsTableAssociationModalOpen}
+            selectedDomainDatasource={selectedDomainDatasource}
+            setSelectedDomainDatasource={setSelectedDomainDatasource}
+            tablesInDatasource={tablesInDatasource}
+            setTablesInDatasource={setTablesInDatasource}
           />
         )}
 

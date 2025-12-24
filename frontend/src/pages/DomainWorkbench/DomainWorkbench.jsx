@@ -784,6 +784,33 @@ const DomainWorkbench = () => {
       handleCreateDatasource();
     }
   };
+  
+  // 测试数据源连通性
+  const handleTestDatasourceConnection = (datasource) => {
+    fetch(`/api/datasource/${datasource.id}/test-connection`, {
+      method: 'PUT'
+    })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          showNotification(`数据源 "${datasource.name}" 连通性测试成功`);
+        } else {
+          showNotification(`数据源 "${datasource.name}" 连通性测试失败: ${result.message}`, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Failed to test datasource connection:', error);
+        showNotification(`数据源 "${datasource.name}" 连通性测试失败`, 'error');
+      });
+  };
+  
+  // 跳转到数据源的数据表列表页面
+  const handleNavigateToTables = (datasource) => {
+    // 这里可以添加跳转到数据表列表页面的逻辑
+    // 例如：navigate(`/domain/${domainId}/datasource/${datasource.id}/tables`);
+    console.log(`跳转到数据源 ${datasource.name} 的数据表列表页面`);
+    showNotification(`跳转到数据源 "${datasource.name}" 的数据表列表页面`);
+  };
 
   // 过滤模型
   const filteredModels = models.filter(model =>
@@ -949,6 +976,8 @@ const DomainWorkbench = () => {
             handleEditDatasource={handleEditDatasource}
             handleDeleteDatasource={handleDeleteDatasource}
             handleToggleDatasource={handleToggleDatasource}
+            handleTestDatasourceConnection={handleTestDatasourceConnection}
+            handleNavigateToTables={handleNavigateToTables}
             setIsDatasourceModalOpen={setIsDatasourceModalOpen}
             setEditingDatasource={setEditingDatasource}
             setNewDatasource={setNewDatasource}

@@ -7,6 +7,8 @@ const DatasourceManager = ({
   handleEditDatasource,
   handleDeleteDatasource,
   handleToggleDatasource,
+  handleTestDatasourceConnection,
+  handleNavigateToTables,
   setIsDatasourceModalOpen,
   setEditingDatasource,
   setNewDatasource
@@ -56,7 +58,14 @@ const DatasourceManager = ({
               filteredDatasources.map((datasource, index) => (
                 <tr key={datasource.id}>
                   <td>{index + 1}</td>
-                  <td>{datasource.name}</td>
+                  <td>
+                    <span 
+                      style={{ cursor: 'pointer', color: '#1890ff' }}
+                      onClick={() => handleNavigateToTables(datasource)}
+                    >
+                      {datasource.name}
+                    </span>
+                  </td>
                   <td>{datasource.type}</td>
                   <td><code>{datasource.url}</code></td>
                   <td>{datasource.tableName}</td>
@@ -68,6 +77,12 @@ const DatasourceManager = ({
                   <td>{datasource.description}</td>
                   <td>
                     <button className="edit" onClick={() => handleEditDatasource(datasource)}>编辑</button>
+                    <button 
+                      className="test" 
+                      onClick={() => handleTestDatasourceConnection(datasource)}
+                    >
+                      连通性测试
+                    </button>
                     <button 
                       className={`toggle ${datasource.status === 'active' ? 'inactive' : 'active'}`} 
                       onClick={() => handleToggleDatasource(datasource.id)}

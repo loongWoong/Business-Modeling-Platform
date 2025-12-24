@@ -11,8 +11,26 @@ const DatasourceManager = ({
   setEditingDatasource, 
   newDatasource, 
   setNewDatasource,
-  onMappingClick
+  onMappingClick,
+  // 新增关联表功能相关属性
+  domainDatasources,
+  isTableAssociationModalOpen,
+  setIsTableAssociationModalOpen,
+  selectedDomainDatasource,
+  setSelectedDomainDatasource,
+  tablesInDatasource,
+  setTablesInDatasource
 }) => {
+  // 数据库类型筛选状态
+  const [selectedDatabaseType, setSelectedDatabaseType] = useState('');
+  
+  // 可用的数据库类型列表
+  const databaseTypes = ['mysql', 'postgresql', 'oracle', 'sqlserver', 'mongodb', 'hive'];
+  
+  // 过滤后的数据源列表
+  const filteredDomainDatasources = selectedDatabaseType 
+    ? domainDatasources.filter(ds => ds.type === selectedDatabaseType)
+    : domainDatasources;
   // 处理创建数据源
   const handleCreateDatasource = () => {
     fetch('/api/datasource', {
@@ -118,19 +136,11 @@ const DatasourceManager = ({
         <div>
           <button 
             onClick={() => {
-              setEditingDatasource(null);
-              setNewDatasource({
-                name: '',
-                type: 'mysql',
-                url: '',
-                tableName: '',
-                status: 'inactive',
-                description: ''
-              });
-              setIsDatasourceModalOpen(true);
+              // 打开关联表选择模态框
+              setIsTableAssociationModalOpen(true);
             }}
           >
-            新建数据源
+            关联表
           </button>
         </div>
         <div>
@@ -189,6 +199,208 @@ const DatasourceManager = ({
           </tbody>
         </table>
       </div>
+      
+      {/* 关联表选择模态框 */}
+      {isTableAssociationModalOpen && (
+        <div className="modal">
+          <div className="modal-content" style={{ width: '800px' }}>
+            <h2>关联表</h2>
+            <div style={{ display: 'flex', gap: '20px' }}>
+              {/* 左侧：业务域数据源列表 */}
+              <div style={{ flex: 1, border: '1px solid #e0e0e0', padding: '10px', borderRadius: '4px' }}>
+                <h3>选择数据源</h3>
+                
+                {/* 数据库类型筛选 */}
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>数据库类型</label>
+                  <select 
+                    style={{ width: '100%', padding: '8px' }}
+                    value={selectedDatabaseType}
+                    onChange={(e) => {
+                      setSelectedDatabaseType(e.target.value);
+                      // 重置选择的数据源
+                      setSelectedDomainDatasource(null);
+                      setTablesInDatasource([]);
+                    }}
+                  >
+                    <option value="">所有类型</option>
+                    {databaseTypes.map(type => (
+                      <option key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <select 
+                  style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
+                  value={selectedDomainDatasource?.id || ''}
+                  onChange={(e) => {
+                    const datasourceId = parseInt(e.target.value);
+                    const datasource = filteredDomainDatasources.find(ds => ds.id === datasourceId);
+                    setSelectedDomainDatasource(datasource);
+                    
+                    // 查询数据源下的表列表
+                    if (datasource) {
+                      // 先检查数据源连通性
+                      fetch(`/api/datasource/${datasource.id}/test-connection`)
+                        .then(response => {
+                          if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                          }
+                          return response.json();
+                        })
+                        .then(connectionResult => {
+                          if (connectionResult.success) {
+                            // 连通性检查成功，获取表列表
+                            return fetch(`/api/datasource/${datasource.id}/tables`);
+                          } else {
+                            throw new Error('数据源连接失败');
+                          }
+                        })
+                        .then(response => {
+                          if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                          }
+                          return response.json();
+                        })
+                        .then(tableData => {
+                          setTablesInDatasource(tableData);
+                          showNotification('成功获取表列表');
+                        })
+                        .catch(error => {
+                          console.error('Failed to fetch tables:', error);
+                          // 失败时清空表列表并显示错误
+                          setTablesInDatasource([]);
+                          showNotification('获取表列表失败：' + error.message, 'error');
+                        });
+                    } else {
+                      setTablesInDatasource([]);
+                    }
+                  }}
+                >
+                  <option value="">请选择数据源</option>
+                  {filteredDomainDatasources.map(datasource => (
+                    <option key={datasource.id} value={datasource.id}>
+                      {datasource.name} ({datasource.type})
+                    </option>
+                  ))}
+                </select>
+                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '4px', padding: '10px' }}>
+                  <h4>数据源列表</h4>
+                  <ul style={{ listStyle: 'none', padding: 0 }}>
+                    {filteredDomainDatasources.map(datasource => (
+                      <li key={datasource.id} style={{ marginBottom: '8px', cursor: 'pointer', padding: '8px', borderRadius: '4px', backgroundColor: selectedDomainDatasource?.id === datasource.id ? '#e6f7ff' : 'transparent' }} 
+                          onClick={() => {
+                            setSelectedDomainDatasource(datasource);
+                            // 查询数据源下的表列表
+                            if (datasource) {
+                              // 先检查数据源连通性
+                              fetch(`/api/datasource/${datasource.id}/test-connection`)
+                                .then(response => {
+                                  if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                  }
+                                  return response.json();
+                                })
+                                .then(connectionResult => {
+                                  if (connectionResult.success) {
+                                    // 连通性检查成功，获取表列表
+                                    return fetch(`/api/datasource/${datasource.id}/tables`);
+                                  } else {
+                                    throw new Error('数据源连接失败');
+                                  }
+                                })
+                                .then(response => {
+                                  if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                  }
+                                  return response.json();
+                                })
+                                .then(tableData => {
+                                  setTablesInDatasource(tableData);
+                                  showNotification('成功获取表列表');
+                                })
+                                .catch(error => {
+                                  console.error('Failed to fetch tables:', error);
+                                  // 失败时清空表列表并显示错误
+                                  setTablesInDatasource([]);
+                                  showNotification('获取表列表失败：' + error.message, 'error');
+                                });
+                            } else {
+                              setTablesInDatasource([]);
+                            }
+                          }}
+                      >
+                        <div><strong>{datasource.name}</strong></div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>{datasource.type} - {datasource.url}</div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>{datasource.description}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              
+              {/* 右侧：数据源下的表列表 */}
+              <div style={{ flex: 1, border: '1px solid #e0e0e0', padding: '10px', borderRadius: '4px' }}>
+                <h3>选择表</h3>
+                {selectedDomainDatasource ? (
+                  <>
+                    <div style={{ marginBottom: '10px', padding: '8px', backgroundColor: '#f0f2f5', borderRadius: '4px' }}>
+                      <div><strong>当前数据源：</strong>{selectedDomainDatasource.name}</div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>{selectedDomainDatasource.type} - {selectedDomainDatasource.url}</div>
+                    </div>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                      <table className="data-table" style={{ width: '100%' }}>
+                        <thead>
+                          <tr>
+                            <th>表名</th>
+                            <th>描述</th>
+                            <th>操作</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tablesInDatasource.map(table => (
+                            <tr key={table.id}>
+                              <td>{table.name}</td>
+                              <td>{table.description}</td>
+                              <td>
+                                <button 
+                                  className="submit"
+                                  onClick={() => {
+                                    // 关联表逻辑：将选中的表关联到当前模型
+                                    const newAssociation = {
+                                      ...selectedDomainDatasource,
+                                      tableName: table.name
+                                    };
+                                    // 添加到当前模型的数据源列表
+                                    setDatasources([...datasources, newAssociation]);
+                                    showNotification(`成功关联表 "${table.name}"`);
+                                    setIsTableAssociationModalOpen(false);
+                                  }}
+                                >
+                                  关联
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                    请先选择一个数据源
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="form-actions" style={{ marginTop: '20px' }}>
+              <button className="cancel" onClick={() => setIsTableAssociationModalOpen(false)}>取消</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

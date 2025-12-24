@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Modal, Form, Input, Select, Button } from 'antd';
 
 const { Option } = Select;
@@ -12,6 +12,8 @@ const DatasourceModal = ({
   setEditingDatasource,
   handleSaveDatasource
 }) => {
+  const fileInputRef = useRef(null);
+  
   const handleCancel = () => {
     setIsDatasourceModalOpen(false);
     setEditingDatasource(null);
@@ -58,7 +60,7 @@ const DatasourceModal = ({
         >
           <Select
             value={newDatasource.type}
-            onChange={(value) => setNewDatasource({ ...newDatasource, type: value })}
+            onChange={(value) => setNewDatasource({ ...newDatasource, type: value, url: '' })}
             placeholder="选择数据源类型"
           >
             <Option value="mysql">MySQL</Option>
@@ -67,19 +69,60 @@ const DatasourceModal = ({
             <Option value="sqlserver">SQL Server</Option>
             <Option value="kafka">Kafka</Option>
             <Option value="api">API</Option>
+            <Option value="sqlite">SQLite</Option>
+            <Option value="duckdb">DuckDB</Option>
           </Select>
         </Form.Item>
         
-        <Form.Item
-          label="URL *"
-          rules={[{ required: true, message: '请输入数据源URL' }]}
-        >
-          <Input
-            value={newDatasource.url}
-            onChange={(e) => setNewDatasource({ ...newDatasource, url: e.target.value })}
-            placeholder="例如: jdbc:mysql://localhost:3306/database"
-          />
-        </Form.Item>
+        {/* 根据数据库类型动态显示不同的输入控件 */}
+        {(newDatasource.type === 'sqlite' || newDatasource.type === 'duckdb') ? (
+          <Form.Item
+            label="文件路径 *"
+            rules={[{ required: true, message: '请选择数据库文件' }]}
+            help="请手动输入完整的文件路径，例如：C:/data/mydb.sqlite 或 /home/user/mydb.duckdb"
+          >
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <Input
+                value={newDatasource.url}
+                onChange={(e) => setNewDatasource({ ...newDatasource, url: e.target.value })}
+                placeholder="请输入完整的文件路径，例如：C:/data/mydb.sqlite 或 /home/user/mydb.duckdb"
+                style={{ flex: 1 }}
+              />
+              <input
+                type="file"
+                style={{ display: 'none' }}
+                ref={fileInputRef}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    // 在浏览器环境中，出于安全考虑，无法直接获取文件的完整路径
+                    // 我们只能获取文件名，需要用户手动输入完整路径
+                    // 这里我们将文件名设置到输入框，提示用户手动补全路径
+                    setNewDatasource({ ...newDatasource, url: file.name });
+                  }
+                }}
+              />
+              <Button 
+                type="default" 
+                onClick={() => fileInputRef.current?.click()}
+                style={{ cursor: 'pointer' }}
+              >
+                选择文件
+              </Button>
+            </div>
+          </Form.Item>
+        ) : (
+          <Form.Item
+            label="URL *"
+            rules={[{ required: true, message: '请输入数据源URL' }]}
+          >
+            <Input
+              value={newDatasource.url}
+              onChange={(e) => setNewDatasource({ ...newDatasource, url: e.target.value })}
+              placeholder="例如: jdbc:mysql://localhost:3306/database"
+            />
+          </Form.Item>
+        )}
         
         <Form.Item label="表名/主题名">
           <Input
