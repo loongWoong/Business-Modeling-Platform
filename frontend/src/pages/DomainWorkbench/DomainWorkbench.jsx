@@ -696,12 +696,18 @@ const DomainWorkbench = () => {
   
   // 数据源管理处理函数
   const handleCreateDatasource = () => {
+    // 使用相对路径，让Vite代理处理API请求
     fetch('/api/datasource', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...newDatasource, domainId: parseInt(domainId) })
+      body: JSON.stringify({ ...newDatasource, domainId: parseInt(domainId), modelId: null })
     })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(datasource => {
         setDatasources([...datasources, datasource]);
         setIsDatasourceModalOpen(false);
@@ -721,10 +727,11 @@ const DomainWorkbench = () => {
   };
   
   const handleUpdateDatasource = () => {
+    // 确保发送domainId字段
     fetch(`/api/datasource/${editingDatasource.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newDatasource)
+      body: JSON.stringify({ ...newDatasource, domainId: parseInt(domainId) })
     })
       .then(response => response.json())
       .then(updatedDatasource => {
@@ -787,8 +794,8 @@ const DomainWorkbench = () => {
   
   // 测试数据源连通性
   const handleTestDatasourceConnection = (datasource) => {
-    fetch(`/api/datasource/${datasource.id}/test-connection`, {
-      method: 'PUT'
+    fetch(`/api/datasource/${datasource.id}/test`, {
+      method: 'POST'
     })
       .then(response => response.json())
       .then(result => {
@@ -804,12 +811,23 @@ const DomainWorkbench = () => {
       });
   };
   
-  // 跳转到数据源的数据表列表页面
+  // 获取并显示数据源的数据表列表
   const handleNavigateToTables = (datasource) => {
-    // 这里可以添加跳转到数据表列表页面的逻辑
-    // 例如：navigate(`/domain/${domainId}/datasource/${datasource.id}/tables`);
-    console.log(`跳转到数据源 ${datasource.name} 的数据表列表页面`);
-    showNotification(`跳转到数据源 "${datasource.name}" 的数据表列表页面`);
+    fetch(`/api/datasource/${datasource.id}/tables`)
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          // 这里可以添加显示数据表列表的逻辑，例如打开一个模态框
+          console.log(`数据源 ${datasource.name} 的数据表列表:`, result.tables);
+          showNotification(`数据源 "${datasource.name}" 包含 ${result.tables.length} 张表: ${result.tables.join(', ')}`);
+        } else {
+          showNotification(`获取数据源 "${datasource.name}" 的数据表列表失败: ${result.message}`, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Failed to get datasource tables:', error);
+        showNotification(`获取数据源 "${datasource.name}" 的数据表列表失败`, 'error');
+      });
   };
 
   // 过滤模型

@@ -580,9 +580,11 @@ def create_tables(conn):
         status VARCHAR(50),
         description TEXT,
         modelId INTEGER,
+        domainId INTEGER,
         createdAt DATE,
         updatedAt DATE,
-        FOREIGN KEY (modelId) REFERENCES models(id)
+        FOREIGN KEY (modelId) REFERENCES models(id),
+        FOREIGN KEY (domainId) REFERENCES domains(id)
     )
     """)
     
@@ -717,11 +719,13 @@ def insert_data(conn, data):
     
     # 插入数据源数据
     for datasource in data["datasources"]:
+        # 添加domainId字段，默认为3（路网设施域）
         conn.execute(
-            "INSERT INTO datasources (id, name, type, url, tableName, status, description, modelId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO datasources (id, name, type, url, tableName, status, description, modelId, domainId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 datasource["id"], datasource["name"], datasource["type"], datasource["url"],
                 datasource["tableName"], datasource["status"], datasource["description"], datasource["modelId"],
+                3, # 默认为路网设施域
                 datasource["createdAt"], datasource["updatedAt"]
             )
         )

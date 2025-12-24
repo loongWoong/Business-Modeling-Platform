@@ -124,10 +124,40 @@ const DatasourceManager = ({
 
   // 测试数据源连接
   const handleTestConnection = (datasource) => {
-    // 模拟测试连接
-    setTimeout(() => {
-      showNotification(`数据源 "${datasource.name}" 连接测试成功`);
-    }, 1000);
+    fetch(`/api/datasource/${datasource.id}/test`, {
+      method: 'POST'
+    })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          showNotification(`数据源 "${datasource.name}" 连接测试成功`);
+        } else {
+          showNotification(`数据源 "${datasource.name}" 连接测试失败: ${result.message}`, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Failed to test datasource connection:', error);
+        showNotification(`数据源 "${datasource.name}" 连接测试失败`, 'error');
+      });
+  };
+
+  // 获取并显示数据源的数据表列表
+  const handleNavigateToTables = (datasource) => {
+    fetch(`/api/datasource/${datasource.id}/tables`)
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          // 这里可以添加显示数据表列表的逻辑，例如打开一个模态框
+          console.log(`数据源 ${datasource.name} 的数据表列表:`, result.tables);
+          showNotification(`数据源 "${datasource.name}" 包含 ${result.tables.length} 张表: ${result.tables.join(', ')}`);
+        } else {
+          showNotification(`获取数据源 "${datasource.name}" 的数据表列表失败: ${result.message}`, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Failed to get datasource tables:', error);
+        showNotification(`获取数据源 "${datasource.name}" 的数据表列表失败`, 'error');
+      });
   };
 
   return (
@@ -171,7 +201,14 @@ const DatasourceManager = ({
             {datasources && datasources.length > 0 ? (
               datasources.map(datasource => (
                 <tr key={datasource.id}>
-                  <td>{datasource.name}</td>
+                  <td>
+                    <span 
+                      style={{ cursor: 'pointer', color: '#1890ff' }}
+                      onClick={() => handleNavigateToTables(datasource)}
+                    >
+                      {datasource.name}
+                    </span>
+                  </td>
                   <td>{datasource.type}</td>
                   <td>{datasource.url}</td>
                   <td>{datasource.tableName}</td>
