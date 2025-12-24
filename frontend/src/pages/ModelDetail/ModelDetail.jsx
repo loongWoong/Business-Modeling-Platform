@@ -571,7 +571,7 @@ const ModelDetail = () => {
           className={activeTab === 'actions' ? 'active' : ''}
           onClick={() => setActiveTab('actions')}
         >
-          动作
+          接口
         </button>
       </div>
 
@@ -686,7 +686,7 @@ const ModelDetail = () => {
           />
         )}
 
-        {/* 动作Tab */}
+        {/* 接口Tab */}
         {activeTab === 'actions' && (
           <ActionManager 
             modelId={modelId}

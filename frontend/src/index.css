@@ -856,7 +856,7 @@ body {
   overflow-y: auto;
 }
 
-/* 动作管理器样式 */
+/* 接口管理器样式 */
 .action-manager {
   background: var(--bg-primary);
 }
