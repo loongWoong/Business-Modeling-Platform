@@ -11,7 +11,12 @@ const SemanticIndicatorManager = ({
   handleOfflineIndicator, 
   handleCopyIndicator,
   viewMode,
-  setViewMode
+  setViewMode,
+  setIsIndicatorModalOpen,
+  setEditingIndicator,
+  setNewIndicator,
+  handleIndicatorExport,
+  handleIndicatorImport
 }) => {
   const filteredIndicators = semanticIndicators.filter(indicator => 
     indicator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -43,9 +48,13 @@ const SemanticIndicatorManager = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <button onClick={() => console.log('新建指标')}>新建指标</button>
-        <button onClick={() => console.log('导入指标')}>导入</button>
-        <button onClick={() => console.log('导出指标')}>导出</button>
+        <button onClick={() => {
+          setEditingIndicator(null);
+          setNewIndicator({ name: '', expression: '', returnType: 'number', description: '', status: 'draft', unit: '' });
+          setIsIndicatorModalOpen(true);
+        }}>新建指标</button>
+        <button onClick={handleIndicatorImport}>导入</button>
+        <button onClick={handleIndicatorExport}>导出</button>
         <button 
           onClick={() => setViewMode(viewMode === 'table' ? 'card' : 'table')}
           className="view-toggle"

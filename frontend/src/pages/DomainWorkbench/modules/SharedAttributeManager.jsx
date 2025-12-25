@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Pagination from '../../../components/Pagination';
 
 const SharedAttributeManager = ({ 
@@ -10,7 +10,10 @@ const SharedAttributeManager = ({
   viewMode,
   setViewMode,
   handleAttrExport,
-  handleAttrImport
+  handleAttrImport,
+  setIsAttrModalOpen,
+  setEditingAttr,
+  setNewAttr
 }) => {
   const filteredAttributes = sharedAttributes.filter(attr => 
     attr.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -41,7 +44,11 @@ const SharedAttributeManager = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <button onClick={() => console.log('新建共享属性')}>新建属性</button>
+        <button onClick={() => {
+          setEditingAttr(null);
+          setNewAttr({ name: '', type: 'string', length: '', precision: '', description: '', valueRange: '' });
+          setIsAttrModalOpen(true);
+        }}>新建属性</button>
         <button onClick={handleAttrImport}>导入</button>
         <button onClick={handleAttrExport}>导出</button>
         <button 

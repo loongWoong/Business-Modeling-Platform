@@ -1065,6 +1065,9 @@ const DomainWorkbench = () => {
             setViewMode={setAttributeViewMode}
             handleAttrExport={handleAttrExport}
             handleAttrImport={handleAttrImport}
+            setIsAttrModalOpen={setIsAttrModalOpen}
+            setEditingAttr={setEditingAttr}
+            setNewAttr={setNewAttr}
           />
         )}
         
@@ -1095,6 +1098,11 @@ const DomainWorkbench = () => {
             handleCopyIndicator={handleCopyIndicator}
             viewMode={indicatorViewMode}
             setViewMode={setIndicatorViewMode}
+            setIsIndicatorModalOpen={setIsIndicatorModalOpen}
+            setEditingIndicator={setEditingIndicator}
+            setNewIndicator={setNewIndicator}
+            handleIndicatorExport={handleIndicatorExport}
+            handleIndicatorImport={handleIndicatorImport}
           />
         )}
 

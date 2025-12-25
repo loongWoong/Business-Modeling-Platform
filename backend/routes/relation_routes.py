@@ -34,6 +34,49 @@ def get_relations():
             }
             result.append(relation_with_names)
         
+        # 如果relations表中没有数据，尝试从model_edges表中创建关系
+        if not result and models:
+            # 查询model_edges表
+            model_edges = conn.execute("SELECT * FROM model_edges").fetchall()
+            
+            # 为每个model_edge创建一个默认关系
+            for edge in model_edges:
+                source_model_id = edge[0]
+                target_model_id = edge[1]
+                
+                # 检查是否已经存在相同的关系
+                existing_relation = conn.execute(
+                    "SELECT * FROM relations WHERE sourceModelId = ? AND targetModelId = ?", 
+                    (source_model_id, target_model_id)
+                ).fetchone()
+                
+                if not existing_relation:
+                    # 创建新关系
+                    source_model_name = model_dict.get(source_model_id, f"模型{source_model_id}")
+                    target_model_name = model_dict.get(target_model_id, f"模型{target_model_id}")
+                    
+                    # 获取下一个ID
+                    next_id = conn.execute("SELECT COALESCE(MAX(id), 0) + 1 FROM relations").fetchone()[0]
+                    
+                    # 插入新关系
+                    conn.execute(
+                        "INSERT INTO relations (id, name, sourceModelId, targetModelId, type, description, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (next_id, f"{source_model_name} 到 {target_model_name} 的关系", source_model_id, target_model_id, "one-to-many", "自动生成的关系", True)
+                    )
+                    
+                    # 添加到结果列表
+                    result.append({
+                        "id": next_id,
+                        "name": f"{source_model_name} 到 {target_model_name} 的关系",
+                        "sourceModelId": source_model_id,
+                        "targetModelId": target_model_id,
+                        "type": "one-to-many",
+                        "description": "自动生成的关系",
+                        "enabled": True,
+                        "sourceModel": source_model_name,
+                        "targetModel": target_model_name
+                    })
+        
         if model_id:
             result = [r for r in result if r["sourceModelId"] == int(model_id)]
         
@@ -41,7 +84,7 @@ def get_relations():
             # 获取该域下的所有模型ID
             domain_model_ids = conn.execute("SELECT id FROM models WHERE domainId = ?", (int(domain_id),)).fetchall()
             domain_model_ids = [row[0] for row in domain_model_ids]
-            result = [r for r in result if r["sourceModelId"] in domain_model_ids]
+            result = [r for r in result if r["sourceModelId"] in domain_model_ids or r["targetModelId"] in domain_model_ids]
         
         return jsonify(result)
     finally:
