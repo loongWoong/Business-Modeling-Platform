@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from utils import get_db_connection, get_current_date, test_database_connection, get_database_tables
+from utils import get_db_connection, get_current_date, test_database_connection, get_database_tables, get_database_table_schema
 
 datasource_bp = Blueprint('datasource', __name__)
 
@@ -257,29 +257,81 @@ def get_datasource_tables(id):
     finally:
         conn.close()
 
+@datasource_bp.route('/<int:id>/tables/<table_name>/schema', methods=['GET'])
+def get_table_schema(id, table_name):
+    """获取数据源表结构"""
+    conn = get_db_connection()
+    try:
+        # 获取数据源信息
+        datasource = conn.execute("SELECT type, url, username, password FROM datasources WHERE id = ?", (id,)).fetchone()
+        if not datasource:
+            return jsonify({"error": "Datasource not found"}), 404
+        
+        # 从datasource中提取信息
+        datasource_type = datasource[0]
+        url = datasource[1]
+        username = datasource[2]
+        password = datasource[3]
+        
+        # 使用utils函数获取真实的表结构
+        success, result = get_database_table_schema(datasource_type, url, table_name, username, password)
+        
+        if success:
+            return jsonify(result)
+        else:
+            return jsonify({"error": result}), 500
+    finally:
+        conn.close()
+
 @datasource_bp.route('/<int:id>/mappings', methods=['GET'])
 def get_datasource_mappings(id):
     """获取数据源的映射关系"""
     model_id = request.args.get('modelId')
+    table_name = request.args.get('tableName')
     conn = get_db_connection()
     try:
-        if not model_id:
-            return jsonify({"error": "modelId is required"}), 400
-        
-        model_id_int = int(model_id)
-        
-        # 查询映射关系
-        mappings = conn.execute("SELECT fieldId, propertyId FROM mappings WHERE datasourceId = ? AND modelId = ?", (id, model_id_int)).fetchall()
-        
-        # 转换为字典列表
-        result = []
-        for row in mappings:
-            result.append({
-                "fieldId": row[0],
-                "propertyId": row[1]
-            })
-        
-        return jsonify(result)
+        if model_id:
+            # 如果提供了modelId，直接使用它查询映射关系
+            model_id_int = int(model_id)
+            # 查询映射关系
+            mappings = conn.execute("SELECT fieldId, propertyId FROM mappings WHERE datasourceId = ? AND modelId = ?", (id, model_id_int)).fetchall()
+            # 转换为字典列表
+            result = []
+            for row in mappings:
+                result.append({
+                    "fieldId": row[0],
+                    "propertyId": row[1]
+                })
+            return jsonify(result)
+        elif table_name:
+            # 如果没有提供modelId，但提供了tableName，通过tableName和datasourceId获取modelId
+            model_association = conn.execute(
+                "SELECT modelId FROM model_table_associations WHERE datasourceId = ? AND tableName = ?",
+                (id, table_name)
+            ).fetchone()
+            
+            if not model_association:
+                return jsonify([])
+            
+            model_id = model_association[0]
+            
+            # 从mappings表获取映射关系
+            mappings = conn.execute(
+                "SELECT m.fieldId, p.name as targetProperty FROM mappings m JOIN properties p ON m.propertyId = p.id WHERE m.datasourceId = ? AND m.modelId = ?",
+                (id, model_id)
+            ).fetchall()
+            
+            # 转换为前端需要的格式
+            result = [
+                {
+                    "sourceField": row[0],
+                    "targetProperty": row[1]
+                } for row in mappings
+            ]
+            
+            return jsonify(result)
+        else:
+            return jsonify({"error": "modelId or tableName is required"}), 400
     finally:
         conn.close()
 

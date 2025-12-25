@@ -470,6 +470,7 @@ const ModelDetail = () => {
         // 转换关联数据格式，使其与原有datasources格式兼容
         const compatibleDatasources = dataArray.map(assoc => ({
           id: assoc.id,
+          datasourceId: assoc.datasourceId,
           name: assoc.datasourceName,
           type: assoc.datasourceType,
           url: assoc.datasourceUrl,

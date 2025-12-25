@@ -447,17 +447,18 @@ const DatasourceManager = ({
                                       .then(response => response.json())
                                       .then(savedAssociation => {
                                         // 创建兼容现有数据源列表的对象
-                                        const associationWithDetails = {
-                                          id: savedAssociation.id,
-                                          name: selectedDomainDatasource.name,
-                                          type: selectedDomainDatasource.type,
-                                          url: selectedDomainDatasource.url,
-                                          tableName: savedAssociation.tableName,
-                                          status: savedAssociation.status,
-                                          description: selectedDomainDatasource.description,
-                                          modelId: savedAssociation.modelId,
-                                          domainId: selectedDomainDatasource.domainId
-                                        };
+                                    const associationWithDetails = {
+                                      id: savedAssociation.id, // 关联ID
+                                      datasourceId: selectedDomainDatasource.id, // 正确的数据源ID
+                                      name: selectedDomainDatasource.name,
+                                      type: selectedDomainDatasource.type,
+                                      url: selectedDomainDatasource.url,
+                                      tableName: savedAssociation.tableName,
+                                      status: savedAssociation.status,
+                                      description: selectedDomainDatasource.description,
+                                      modelId: savedAssociation.modelId,
+                                      domainId: selectedDomainDatasource.domainId
+                                    };
                                         // 添加到当前模型的数据源列表
                                         setDatasources([...datasources, associationWithDetails]);
                                         showNotification(`成功关联表 "${table.name}"`);

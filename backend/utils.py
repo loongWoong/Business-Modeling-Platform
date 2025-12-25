@@ -141,3 +141,137 @@ def get_database_tables(datasource_type, url, username=None, password=None):
         return True, tables
     except Exception as e:
         return False, f"获取表列表失败: {str(e)}"
+
+# 获取数据库表结构
+def get_database_table_schema(datasource_type, url, table_name, username=None, password=None):
+    """
+    获取数据库表结构
+    :param datasource_type: 数据源类型（mysql, postgresql, sqlserver等）
+    :param url: 数据库连接URL
+    :param table_name: 表名
+    :param username: 数据库用户名（可选）
+    :param password: 数据库密码（可选）
+    :return: tuple (success, schema or message)
+    """
+    try:
+        fields = []
+        if datasource_type == 'mysql':
+            # MySQL连接URL格式：jdbc:mysql://host:port/database 或 mysql://host:port/database
+            from urllib.parse import urlparse
+            # 处理jdbc前缀
+            if url.startswith('jdbc:'):
+                url = url[5:]
+            parsed_url = urlparse(url)
+            conn = pymysql.connect(
+                host=parsed_url.hostname,
+                port=parsed_url.port or 3306,
+                user=username or parsed_url.username,
+                password=password or parsed_url.password,
+                database=parsed_url.path.lstrip('/')
+            )
+            with conn.cursor() as cursor:
+                # 获取列信息
+                cursor.execute(f"DESCRIBE {table_name}")
+                columns = cursor.fetchall()
+                # 获取主键信息
+                cursor.execute(f"SHOW KEYS FROM {table_name} WHERE Key_name = 'PRIMARY'")
+                primary_keys = {row[4] for row in cursor.fetchall()}
+                # 获取外键信息
+                cursor.execute(f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{table_name}' AND CONSTRAINT_NAME != 'PRIMARY' AND REFERENCED_TABLE_NAME IS NOT NULL")
+                foreign_keys = {row[0] for row in cursor.fetchall()}
+                
+                for col in columns:
+                    col_name = col[0]
+                    fields.append({
+                        "column_name": col_name,
+                        "data_type": col[1],
+                        "is_primary_key": col_name in primary_keys,
+                        "is_foreign_key": col_name in foreign_keys,
+                        "nullable": col[2] == 'YES'
+                    })
+            conn.close()
+        elif datasource_type == 'postgresql' or datasource_type == 'postgres':
+            # PostgreSQL连接URL格式：postgresql://username:password@host:port/database
+            conn = psycopg2.connect(url)
+            with conn.cursor() as cursor:
+                # 获取列基本信息
+                cursor.execute(f"SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = '{table_name}'")
+                columns = cursor.fetchall()
+                # 获取主键信息
+                cursor.execute(f"SELECT a.attname FROM pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey) WHERE i.indrelid = '{table_name}'::regclass AND i.indisprimary")
+                primary_keys = {row[0] for row in cursor.fetchall()}
+                # 获取外键信息
+                cursor.execute(f"SELECT kcu.column_name FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name WHERE tc.table_name = '{table_name}' AND tc.constraint_type = 'FOREIGN KEY'")
+                foreign_keys = {row[0] for row in cursor.fetchall()}
+                
+                for col in columns:
+                    col_name = col[0]
+                    fields.append({
+                        "column_name": col_name,
+                        "data_type": col[1],
+                        "is_primary_key": col_name in primary_keys,
+                        "is_foreign_key": col_name in foreign_keys,
+                        "nullable": col[2] == 'YES'
+                    })
+            conn.close()
+        elif datasource_type == 'sqlserver':
+            # SQL Server连接URL格式：mssql://username:password@host:port/database
+            conn = pyodbc.connect(url)
+            with conn.cursor() as cursor:
+                # 获取列基本信息
+                cursor.execute(f"SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}'")
+                columns = cursor.fetchall()
+                # 获取主键信息
+                cursor.execute(f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE OBJECTPROPERTY(OBJECT_ID(CONSTRAINT_SCHEMA + '.' + CONSTRAINT_NAME), 'IsPrimaryKey') = 1 AND TABLE_NAME = '{table_name}'")
+                primary_keys = {row[0] for row in cursor.fetchall()}
+                # 获取外键信息
+                cursor.execute(f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE OBJECTPROPERTY(OBJECT_ID(CONSTRAINT_SCHEMA + '.' + CONSTRAINT_NAME), 'IsForeignKey') = 1 AND TABLE_NAME = '{table_name}'")
+                foreign_keys = {row[0] for row in cursor.fetchall()}
+                
+                for col in columns:
+                    col_name = col[0]
+                    fields.append({
+                        "column_name": col_name,
+                        "data_type": col[1],
+                        "is_primary_key": col_name in primary_keys,
+                        "is_foreign_key": col_name in foreign_keys,
+                        "nullable": col[2] == 'YES'
+                    })
+            conn.close()
+        elif datasource_type == 'duckdb':
+            # DuckDB连接URL格式：duckdb:///path/to/database.db 或 duckdb://memory
+            conn = duckdb.connect(url.replace('duckdb://', ''))
+            cursor = conn.cursor()
+            # 查询表结构
+            cursor.execute(f"DESCRIBE {table_name}")
+            columns = cursor.fetchall()
+            # 查询主键信息（DuckDB 0.7.0+支持）
+            primary_keys = set()
+            try:
+                cursor.execute(f"SELECT column_name FROM duckdb_constraints WHERE table_name = '{table_name}' AND constraint_type = 'PRIMARY KEY'")
+                primary_keys = {row[0] for row in cursor.fetchall()}
+            except:
+                pass
+            # 查询外键信息（DuckDB 0.7.0+支持）
+            foreign_keys = set()
+            try:
+                cursor.execute(f"SELECT column_name FROM duckdb_constraints WHERE table_name = '{table_name}' AND constraint_type = 'FOREIGN KEY'")
+                foreign_keys = {row[0] for row in cursor.fetchall()}
+            except:
+                pass
+            
+            for col in columns:
+                col_name = col[0]
+                fields.append({
+                    "column_name": col_name,
+                    "data_type": col[1],
+                    "is_primary_key": col_name in primary_keys,
+                    "is_foreign_key": col_name in foreign_keys,
+                    "nullable": col[2] == 'YES'
+                })
+            conn.close()
+        else:
+            return False, f"不支持的数据源类型: {datasource_type}"
+        return True, {"fields": fields}
+    except Exception as e:
+        return False, f"获取表结构失败: {str(e)}"

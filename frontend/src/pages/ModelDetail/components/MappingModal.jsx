@@ -17,72 +17,54 @@ const MappingModal = ({
   const [selectedProperty, setSelectedProperty] = useState(null); // 选中的属性
   const [tableStructure, setTableStructure] = useState(null); // 表结构数据
 
-  // 根据数据源表名生成对应的表结构数据（实际应该从API获取）
+  // 从API获取真实的表结构数据
   useEffect(() => {
-    if (isOpen && datasource) {
-      // 根据表名生成对应的字段结构
-      const generateFieldsByTableName = (tableName) => {
-        const tableNameLower = tableName.toLowerCase();
-        
-        // 车辆表
-        if (tableNameLower.includes('vehicle')) {
-          return [
-            { id: 'field_1', name: 'vehicle_id', type: 'VARCHAR(50)', isPrimaryKey: true },
-            { id: 'field_2', name: 'license_plate', type: 'VARCHAR(20)' },
-            { id: 'field_3', name: 'vehicle_type', type: 'VARCHAR(50)' },
-            { id: 'field_4', name: 'owner_name', type: 'VARCHAR(100)' },
-            { id: 'field_5', name: 'owner_id_card', type: 'VARCHAR(18)' },
-            { id: 'field_6', name: 'vehicle_color', type: 'VARCHAR(20)' },
-            { id: 'field_7', name: 'register_date', type: 'DATE' },
-            { id: 'field_8', name: 'vehicle_status', type: 'VARCHAR(20)' }
-          ];
-        }
-        // 收费站表
-        else if (tableNameLower.includes('station') || tableNameLower.includes('toll_station')) {
-          return [
-            { id: 'field_1', name: 'station_id', type: 'VARCHAR(50)', isPrimaryKey: true },
-            { id: 'field_2', name: 'station_name', type: 'VARCHAR(100)' },
-            { id: 'field_3', name: 'road_id', type: 'VARCHAR(50)' },
-            { id: 'field_4', name: 'station_type', type: 'VARCHAR(20)' },
-            { id: 'field_5', name: 'location', type: 'VARCHAR(200)' },
-            { id: 'field_6', name: 'create_time', type: 'DATETIME' },
-            { id: 'field_7', name: 'status', type: 'VARCHAR(20)' }
-          ];
-        }
-        // 默认字段
-        else {
-          return [
-            { id: 'field_1', name: 'id', type: 'INT', isPrimaryKey: true },
-            { id: 'field_2', name: 'name', type: 'VARCHAR(255)' },
-            { id: 'field_3', name: 'code', type: 'VARCHAR(100)' },
-            { id: 'field_4', name: 'created_at', type: 'DATETIME' },
-            { id: 'field_5', name: 'status', type: 'INT' }
-          ];
-        }
-      };
+    const fetchTableStructure = async () => {
+      if (!isOpen || !datasource) return;
       
-      const mockTableStructure = {
-        tables: [
-          {
-            id: 'table_1',
-            name: datasource.tableName || 'user_table',
-            fields: generateFieldsByTableName(datasource.tableName || '')
-          }
-        ],
-        relations: [] // 表之间的关系
-      };
-      setTableStructure(mockTableStructure);
-      
-      // 加载已有的映射关系
-      loadMappings();
-    }
+      try {
+        // 从API获取真实的表结构，使用datasourceId而不是id（id是关联ID，datasourceId是真实数据源ID）
+        const response = await fetch(`/api/datasource/${datasource.datasourceId}/tables/${datasource.tableName}/schema`);
+        if (response.ok) {
+          const tableSchema = await response.json();
+          
+          // 转换API返回的数据格式为组件需要的格式
+          const realTableStructure = {
+            tables: [
+              {
+                id: `table_${datasource.id}_${datasource.tableName}`,
+                name: datasource.tableName || 'unknown_table',
+                fields: (tableSchema.fields || []).map((field, index) => ({
+                  id: `field_${index + 1}`,
+                  name: field.column_name,
+                  type: field.data_type,
+                  isPrimaryKey: field.is_primary_key || false,
+                  isForeignKey: field.is_foreign_key || false
+                }))
+              }
+            ],
+            relations: [] // 表之间的关系
+          };
+          setTableStructure(realTableStructure);
+        } else {
+          console.error('Failed to fetch table schema:', await response.text());
+        }
+      } catch (error) {
+        console.error('Error fetching table structure:', error);
+      }
+    };
+    
+    fetchTableStructure();
+    
+    // 加载已有的映射关系
+    loadMappings();
   }, [isOpen, datasource]);
 
   // 加载映射关系
   const loadMappings = async () => {
     if (!datasource || !modelId) return;
     try {
-      const response = await fetch(`/api/datasource/${datasource.id}/mappings?modelId=${modelId}`);
+      const response = await fetch(`/api/datasource/${datasource.datasourceId}/mappings?modelId=${modelId}`);
       if (response.ok) {
         const data = await response.json();
         setMappings(data || []);
@@ -96,7 +78,7 @@ const MappingModal = ({
   const saveMappings = async () => {
     if (!datasource || !modelId) return;
     try {
-      const response = await fetch(`/api/datasource/${datasource.id}/mappings`, {
+      const response = await fetch(`/api/datasource/${datasource.datasourceId}/mappings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
