@@ -472,10 +472,10 @@ def execute_etl_task(id):
                                                 for row in source_data:
                                                     transformed_row = {}
                                                     for i, field in enumerate(valid_fields):
-                                                        # 获取目标属性名
-                                                        target_property_name = field_mappings[field]
+                                                        # 获取目标属性名（描述名称）
+                                                        target_property_desc = field_mappings[field]
                                                         # 查找对应的属性
-                                                        prop = next((p for p in properties if p[1] == target_property_name), None)
+                                                        prop = next((p for p in properties if p[1] == target_property_desc), None)
                                                         if prop:
                                                             # 获取属性值
                                                             value = row[i]
@@ -489,7 +489,8 @@ def execute_etl_task(id):
                                                                 transformed_value = value
                                                             else:
                                                                 transformed_value = value
-                                                            transformed_row[target_property_name] = transformed_value
+                                                            # 使用属性的code作为字段名（prop[2]是属性的code）
+                                                            transformed_row[prop[2]] = transformed_value
                                                     transformed_data.append(transformed_row)
                                                 
                                                 print(f"Transformed {len(transformed_data)} records")
