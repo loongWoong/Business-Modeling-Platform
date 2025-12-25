@@ -69,7 +69,16 @@ const ETLConfigurator = () => {
         // 获取表结构
         fetch(`/api/datasource/${relatedTable.datasourceId}/tables/${relatedTable.tableName}/schema`)
           .then(response => response.json())
-          .then(schema => setDatasourceSchema(schema))
+          .then(schema => {
+            // API返回的是{ fields: [...] }格式，需要提取fields数组
+            const fieldsArray = schema.fields || [];
+            // 转换字段格式，确保包含name和type字段
+            const formattedSchema = fieldsArray.map(field => ({
+              name: field.column_name,
+              type: field.data_type
+            }));
+            setDatasourceSchema(formattedSchema);
+          })
           .catch(error => {
             console.error('Failed to fetch table schema:', error);
             // 使用模拟数据

@@ -76,6 +76,49 @@ def create_etl_task():
         # 导入json模块，用于正确序列化配置
         import json
         
+        # 验证配置是否为字典
+        config_data = data.get("config", {})
+        if isinstance(config_data, dict):
+            # 如果是字典，直接序列化
+            config_json = json.dumps(config_data)
+        else:
+            # 如果不是字典，尝试修复
+            try:
+                # 尝试解析为字典
+                if isinstance(config_data, str):
+                    config_dict = json.loads(config_data)
+                    config_json = json.dumps(config_dict)
+                else:
+                    # 其他类型，转换为字符串后序列化
+                    config_json = json.dumps(str(config_data))
+            except:
+                # 无法修复，使用空配置
+                config_json = json.dumps({})
+        
+        print(f"Saving config JSON: {config_json}")
+        
+        # 根据用户需求：源数据源应该是模型绑定关联表的数据表所属的数据源
+        # 获取targetModelId
+        target_model_id = data.get("targetModelId")
+        source_datasource_id = data.get("sourceDatasourceId")
+        
+        # 如果提供了targetModelId，尝试从模型绑定关联表中获取源数据源ID
+        if target_model_id:
+            try:
+                target_model_id_int = int(target_model_id)
+                model_association = conn.execute(
+                    "SELECT datasourceId FROM model_table_associations WHERE modelId = ? AND status = 'active' LIMIT 1", 
+                    (target_model_id_int,)
+                ).fetchone()
+                
+                if model_association:
+                    # 使用关联表中的数据源ID
+                    source_datasource_id = model_association[0]
+                    print(f"Auto-set sourceDatasourceId from model association: {source_datasource_id}")
+            except (ValueError, TypeError):
+                # 忽略类型转换错误，使用原始值
+                pass
+        
         # 插入新任务
         conn.execute(
             "INSERT INTO etl_tasks (id, name, description, sourceDatasourceId, targetModelId, status, schedule, config, createdAt, updatedAt, lastRun, nextRun) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -83,11 +126,11 @@ def create_etl_task():
                 next_id,
                 data.get("name"),
                 data.get("description"),
-                data.get("sourceDatasourceId"),
+                source_datasource_id,
                 data.get("targetModelId"),
                 data.get("status", "inactive"),
                 data.get("schedule", "0 */1 * * *"),
-                json.dumps(data.get("config", {})),
+                config_json,
                 get_current_date(),
                 get_current_date(),
                 None,
@@ -109,16 +152,59 @@ def update_etl_task(id):
         # 导入json模块，用于正确序列化配置
         import json
         
+        # 验证配置是否为字典
+        config_data = data.get("config", {})
+        if isinstance(config_data, dict):
+            # 如果是字典，直接序列化
+            config_json = json.dumps(config_data)
+        else:
+            # 如果不是字典，尝试修复
+            try:
+                # 尝试解析为字典
+                if isinstance(config_data, str):
+                    config_dict = json.loads(config_data)
+                    config_json = json.dumps(config_dict)
+                else:
+                    # 其他类型，转换为字符串后序列化
+                    config_json = json.dumps(str(config_data))
+            except:
+                # 无法修复，使用空配置
+                config_json = json.dumps({})
+        
+        print(f"Updating config JSON: {config_json}")
+        
+        # 根据用户需求：源数据源应该是模型绑定关联表的数据表所属的数据源
+        # 获取targetModelId
+        target_model_id = data.get("targetModelId")
+        source_datasource_id = data.get("sourceDatasourceId")
+        
+        # 如果提供了targetModelId，尝试从模型绑定关联表中获取源数据源ID
+        if target_model_id:
+            try:
+                target_model_id_int = int(target_model_id)
+                model_association = conn.execute(
+                    "SELECT datasourceId FROM model_table_associations WHERE modelId = ? AND status = 'active' LIMIT 1", 
+                    (target_model_id_int,)
+                ).fetchone()
+                
+                if model_association:
+                    # 使用关联表中的数据源ID
+                    source_datasource_id = model_association[0]
+                    print(f"Auto-set sourceDatasourceId from model association on update: {source_datasource_id}")
+            except (ValueError, TypeError):
+                # 忽略类型转换错误，使用原始值
+                pass
+        
         conn.execute(
             "UPDATE etl_tasks SET name = ?, description = ?, sourceDatasourceId = ?, targetModelId = ?, status = ?, schedule = ?, config = ?, updatedAt = ? WHERE id = ?",
             (
                 data.get("name"),
                 data.get("description"),
-                data.get("sourceDatasourceId"),
+                source_datasource_id,
                 data.get("targetModelId"),
                 data.get("status"),
                 data.get("schedule"),
-                json.dumps(data.get("config")),
+                config_json,
                 get_current_date(),
                 id
             )
@@ -134,10 +220,20 @@ def delete_etl_task(id):
     """删除ETL任务"""
     conn = get_db_connection()
     try:
+        # 先删除相关的日志记录，避免外键约束错误
+        conn.execute("DELETE FROM etl_logs WHERE taskId = ?", (id,))
+        # 然后删除任务
         conn.execute("DELETE FROM etl_tasks WHERE id = ?", (id,))
         conn.commit()
         
         return jsonify({"message": "ETL任务删除成功"})
+    except Exception as e:
+        print(f"Error deleting ETL task: {e}")
+        import traceback
+        traceback.print_exc()
+        # 回滚事务
+        conn.rollback()
+        return jsonify({"error": f"删除ETL任务失败: {str(e)}"}), 500
     finally:
         conn.close()
 
@@ -158,17 +254,43 @@ def execute_etl_task(id):
         # 3. 解析任务配置
         import json
         try:
-            config = json.loads(task[7])
+            config_str = task[7]
+            print(f"Attempting to parse config: {config_str}")
+            config = json.loads(config_str)
         except json.JSONDecodeError as e:
-            # 如果配置格式不正确，返回成功，但没有处理任何记录
+            # 如果配置格式不正确，尝试修复：将单引号替换为双引号
             print(f"Failed to parse config: {e}")
-            records_processed = 0
-            records_success = 0
-            records_failed = 0
+            try:
+                # 尝试修复常见的JSON格式问题
+                fixed_config_str = task[7].replace("'", '"')
+                print(f"Attempting to parse fixed config: {fixed_config_str}")
+                config = json.loads(fixed_config_str)
+                print("Successfully parsed fixed config")
+            except json.JSONDecodeError as e2:
+                print(f"Failed to parse fixed config: {e2}")
+                records_processed = 0
+                records_success = 0
+                records_failed = 0
         else:
             # 4. 获取数据源信息
             source_datasource_id = task[3]
             target_model_id = task[4]
+            
+            # 根据用户需求：源数据源应该是模型绑定关联表的数据表所属的数据源
+            # 查询模型绑定关联表，获取源数据源信息
+            model_association = conn.execute(
+                "SELECT datasourceId, tableName FROM model_table_associations WHERE modelId = ? AND status = 'active' LIMIT 1", 
+                (target_model_id,)
+            ).fetchone()
+            
+            if model_association:
+                # 如果找到模型关联表，使用关联表中的数据源ID和表名
+                associated_datasource_id = model_association[0]
+                associated_table_name = model_association[1]
+                print(f"Found model association: datasourceId={associated_datasource_id}, tableName={associated_table_name}")
+                
+                # 更新source_datasource_id为关联表中的数据源ID
+                source_datasource_id = associated_datasource_id
             
             datasource = conn.execute("SELECT type, url, username, password FROM datasources WHERE id = ?", (source_datasource_id,)).fetchone()
             if not datasource:
@@ -193,52 +315,97 @@ def execute_etl_task(id):
                         records_success = 0
                         records_failed = 0
                     else:
-                        # 7. 获取字段映射
-                        mappings = conn.execute("SELECT fieldId, propertyId FROM mappings WHERE datasourceId = ? AND modelId = ?", (source_datasource_id, target_model_id)).fetchall()
-                        if not mappings:
+                        # 7. 使用配置中的字段映射，而不是从mappings表获取
+                        field_mappings = config.get('fieldMappings', {})
+                        print(f"Using field mappings from config: {field_mappings}")
+                        
+                        if not field_mappings:
                             # 如果没有映射关系，返回成功，但没有处理任何记录
                             records_processed = 0
                             records_success = 0
                             records_failed = 0
                         else:
-                            # 8. 实际执行ETL任务（这里使用DuckDB作为示例，实际项目中应该根据数据源类型使用不同的连接方式）
+                            # 8. 实际执行ETL任务
                             try:
                                 # 8.1 连接到源数据源
+                                source_conn = None
                                 if datasource[0] == 'duckdb':
                                     # 使用DuckDB连接到源数据源
                                     source_conn = duckdb.connect(datasource[1])
+                                    print(f"Connected to DuckDB datasource: {datasource[1]}")
+                                elif datasource[0] == 'mysql':
+                                    # MySQL连接
+                                    from urllib.parse import urlparse
+                                    import pymysql
+                                    url = datasource[1]
+                                    if url.startswith('jdbc:'):
+                                        url = url[5:]
+                                    parsed_url = urlparse(url)
+                                    source_conn = pymysql.connect(
+                                        host=parsed_url.hostname,
+                                        port=parsed_url.port or 3306,
+                                        user=datasource[2] or parsed_url.username,
+                                        password=datasource[3] or parsed_url.password,
+                                        database=parsed_url.path.lstrip('/')
+                                    )
+                                    print(f"Connected to MySQL datasource: {datasource[1]}")
+                                elif datasource[0] == 'postgresql' or datasource[0] == 'postgres':
+                                    # PostgreSQL连接
+                                    import psycopg2
+                                    source_conn = psycopg2.connect(datasource[1])
+                                    print(f"Connected to PostgreSQL datasource: {datasource[1]}")
+                                elif datasource[0] == 'sqlserver':
+                                    # SQL Server连接
+                                    import pyodbc
+                                    source_conn = pyodbc.connect(datasource[1])
+                                    print(f"Connected to SQL Server datasource: {datasource[1]}")
                                 else:
-                                    # 对于其他类型的数据源，这里需要根据实际情况实现连接逻辑
-                                    # 例如，对于MySQL，可以使用pymysql.connect()
-                                    # 这里简化处理，直接返回成功，但没有处理任何记录
+                                    # 不支持的数据源类型，返回成功，但没有处理任何记录
+                                    print(f"Unsupported datasource type: {datasource[0]}")
                                     records_processed = 0
                                     records_success = 0
                                     records_failed = 0
-                                    source_conn = None
                             except Exception as e:
                                 # 如果连接数据源失败，返回成功，但没有处理任何记录
                                 print(f"Failed to connect to datasource: {e}")
                                 records_processed = 0
                                 records_success = 0
                                 records_failed = 0
-                                source_conn = None
                             
                             if source_conn is not None:
                                 # 8.2 获取源表数据
                                 try:
-                                    source_table = config['source']['tableName']
+                                    # 优先使用模型关联表中的表名
+                                    source_table = associated_table_name if 'associated_table_name' in locals() else config['source']['tableName']
+                                    print(f"Processing source table: {source_table} (from {'model association' if 'associated_table_name' in locals() else 'config'})")
                                 except KeyError:
                                     # 如果配置中没有source或tableName，返回成功，但没有处理任何记录
+                                    print("No source table name in config")
                                     records_processed = 0
                                     records_success = 0
                                     records_failed = 0
-                                    source_conn.close()
+                                    if source_conn is not None:
+                                        source_conn.close()
                                 else:
                                     # 8.3 获取实际的表结构
+                                    actual_columns = None
                                     try:
                                         # 尝试获取实际的表结构
-                                        describe_result = source_conn.execute(f"DESCRIBE {source_table};").fetchall()
-                                        actual_columns = [col[0] for col in describe_result]
+                                        if datasource[0] == 'duckdb':
+                                            describe_result = source_conn.execute(f"DESCRIBE {source_table};").fetchall()
+                                            actual_columns = [col[0] for col in describe_result]
+                                        elif datasource[0] == 'mysql':
+                                            cursor = source_conn.cursor()
+                                            cursor.execute(f"DESCRIBE {source_table};")
+                                            actual_columns = [col[0] for col in cursor.fetchall()]
+                                        elif datasource[0] in ['postgresql', 'postgres']:
+                                            cursor = source_conn.cursor()
+                                            cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{source_table}';")
+                                            actual_columns = [col[0] for col in cursor.fetchall()]
+                                        elif datasource[0] == 'sqlserver':
+                                            cursor = source_conn.cursor()
+                                            cursor.execute(f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{source_table}';")
+                                            actual_columns = [col[0] for col in cursor.fetchall()]
                                         print(f"Actual columns in {source_table}: {actual_columns}")
                                     except Exception as e:
                                         # 如果获取表结构失败，使用配置中的schema
@@ -246,73 +413,196 @@ def execute_etl_task(id):
                                         try:
                                             source_schema = config['source']['schema']
                                             actual_columns = [field['name'] for field in source_schema]
+                                            print(f"Using schema from config: {actual_columns}")
                                         except KeyError:
                                             # 如果配置中没有schema，返回成功，但没有处理任何记录
+                                            print("No schema in config")
                                             records_processed = 0
                                             records_success = 0
                                             records_failed = 0
-                                            source_conn.close()
-                                            actual_columns = None
+                                            if source_conn is not None:
+                                                source_conn.close()
                                     
                                     if actual_columns is not None:
                                         # 8.4 构建查询语句：只包含实际表中存在的字段
-                                        # 从映射关系中获取需要查询的字段
-                                        fields_to_query = list(set([mapping[0] for mapping in mappings]))
+                                        # 从配置的映射关系中获取需要查询的字段
+                                        fields_to_query = list(field_mappings.keys())
                                         # 过滤掉实际表中不存在的字段
                                         valid_fields = [field for field in fields_to_query if field in actual_columns]
                                         
                                         if not valid_fields:
                                             # 如果没有有效的字段，返回成功，但没有处理任何记录
+                                            print(f"No valid fields to query. Config fields: {fields_to_query}, Actual columns: {actual_columns}")
                                             records_processed = 0
                                             records_success = 0
                                             records_failed = 0
-                                            source_conn.close()
+                                            if source_conn is not None:
+                                                source_conn.close()
                                         else:
+                                            # 初始化记录统计
+                                            records_processed = 0
+                                            records_success = 0
+                                            records_failed = 0
+                                            
                                             # 构建查询语句
                                             source_query = f"SELECT {', '.join(valid_fields)} FROM {source_table}"
                                             print(f"Executing query: {source_query}")
                                             
+                                            # 初始化transformed_data变量
+                                            transformed_data = []
+                                            
                                             try:
                                                 # 执行查询
-                                                source_data = source_conn.execute(source_query).fetchall()
+                                                source_data = []
+                                                if datasource[0] == 'duckdb':
+                                                    source_data = source_conn.execute(source_query).fetchall()
+                                                else:
+                                                    # 使用cursor执行查询
+                                                    cursor = source_conn.cursor()
+                                                    cursor.execute(source_query)
+                                                    source_data = cursor.fetchall()
                                                 
                                                 # 关闭源数据源连接
-                                                source_conn.close()
+                                                if source_conn is not None:
+                                                    source_conn.close()
+                                                
+                                                print(f"Fetched {len(source_data)} records from source")
                                                 
                                                 # 将数据转换为模型所需的格式
-                                                transformed_data = []
                                                 for row in source_data:
                                                     transformed_row = {}
                                                     for i, field in enumerate(valid_fields):
-                                                        # 查找该字段对应的属性
-                                                        mapping = next((m for m in mappings if m[0] == field), None)
-                                                        if mapping:
-                                                            property_id = mapping[1]
-                                                            # 查找属性信息
-                                                            prop = next((p for p in properties if p[0] == property_id), None)
-                                                            if prop:
-                                                                # 根据属性类型转换数据
-                                                                if prop[3] == 'int':
-                                                                    transformed_row[prop[1]] = int(row[i]) if row[i] else None
-                                                                elif prop[3] == 'float':
-                                                                    transformed_row[prop[1]] = float(row[i]) if row[i] else None
-                                                                elif prop[3] == 'datetime':
-                                                                    transformed_row[prop[1]] = row[i]  # 假设源数据已经是datetime类型
-                                                                else:
-                                                                    transformed_row[prop[1]] = row[i]
+                                                        # 获取目标属性名
+                                                        target_property_name = field_mappings[field]
+                                                        # 查找对应的属性
+                                                        prop = next((p for p in properties if p[1] == target_property_name), None)
+                                                        if prop:
+                                                            # 获取属性值
+                                                            value = row[i]
+                                                            # 根据属性类型转换数据
+                                                            if prop[3] == 'int':
+                                                                transformed_value = int(value) if value is not None else None
+                                                            elif prop[3] == 'float':
+                                                                transformed_value = float(value) if value is not None else None
+                                                            elif prop[3] == 'datetime':
+                                                                # 转换为datetime类型
+                                                                transformed_value = value
+                                                            else:
+                                                                transformed_value = value
+                                                            transformed_row[target_property_name] = transformed_value
                                                     transformed_data.append(transformed_row)
-                                                    
-                                                # 这里只是记录日志，实际项目中应该实现数据加载逻辑
-                                                records_processed = len(transformed_data)
-                                                records_success = records_processed
-                                                records_failed = 0
+                                                
+                                                print(f"Transformed {len(transformed_data)} records")
+                                                
+                                                # 9. 实现数据加载逻辑：先创建目标表，然后加载数据
+                                                print(f"Attempting to load {len(transformed_data)} records into target table")
+                                                
+                                                # 获取目标数据源信息（datasource ID 17）
+                                                target_datasource = conn.execute("SELECT type, url, username, password FROM datasources WHERE id = ?", (17,)).fetchone()
+                                                if not target_datasource:
+                                                    print("Target datasource not found")
+                                                    records_processed = len(transformed_data)
+                                                    records_success = 0
+                                                    records_failed = records_processed
+                                                else:
+                                                    # 9.1 创建目标表（如果不存在）
+                                                    print(f"Creating target table if not exists in target datasource")
+                                                    try:
+                                                        # 获取目标表名
+                                                        target_table_name = config['target']['tableDefinition']['tableName']
+                                                        print(f"Target table name: {target_table_name}")
+                                                        
+                                                        # 获取表定义
+                                                        table_definition = config['target']['tableDefinition']
+                                                        columns = table_definition['columns']
+                                                        
+                                                        # 构建CREATE TABLE语句
+                                                        create_table_sql = f"CREATE TABLE IF NOT EXISTS {target_table_name} ("
+                                                        
+                                                        # 构建列定义
+                                                        column_definitions = []
+                                                        for col in columns:
+                                                            # 映射前端数据类型到数据库类型
+                                                            db_type = col['type']
+                                                            if db_type == 'string':
+                                                                db_type = 'VARCHAR'
+                                                            elif db_type == 'integer':
+                                                                db_type = 'INTEGER'
+                                                            elif db_type == 'datetime':
+                                                                db_type = 'DATETIME'
+                                                            elif db_type == 'float':
+                                                                db_type = 'FLOAT'
+                                                            
+                                                            # 构建列定义
+                                                            col_def = f"{col['name']} {db_type}"
+                                                            if col.get('required', False):
+                                                                col_def += " NOT NULL"
+                                                            column_definitions.append(col_def)
+                                                        
+                                                        # 连接列定义
+                                                        create_table_sql += ", ".join(column_definitions)
+                                                        create_table_sql += ")"
+                                                        print(f"Create table SQL: {create_table_sql}")
+                                                        
+                                                        # 连接到目标数据源（datasource ID 17 - test.db）
+                                                        target_conn = None
+                                                        if target_datasource[0] == 'duckdb':
+                                                            target_conn = duckdb.connect(target_datasource[1])
+                                                            print(f"Connected to target DuckDB datasource: {target_datasource[1]}")
+                                                        
+                                                        if target_conn:
+                                                            # 执行创建表语句
+                                                            target_conn.execute(create_table_sql)
+                                                            print(f"Target table {target_table_name} created successfully")
+                                                            
+                                                            # 9.2 加载数据到目标表
+                                                            print(f"Loading data into target table {target_table_name}")
+                                                            if transformed_data:
+                                                                # 构建INSERT语句
+                                                                # 获取列名列表
+                                                                column_names = list(transformed_data[0].keys())
+                                                                # 构建INSERT语句
+                                                                insert_sql = f"INSERT INTO {target_table_name} ({', '.join(column_names)}) VALUES ({', '.join(['?' for _ in column_names])})"
+                                                                print(f"Insert SQL: {insert_sql}")
+                                                                
+                                                                # 执行批量插入
+                                                                # 准备数据
+                                                                insert_data = [tuple(row.values()) for row in transformed_data]
+                                                                print(f"Insert data sample: {insert_data[:2]}")
+                                                                
+                                                                # 执行插入
+                                                                target_conn.executemany(insert_sql, insert_data)
+                                                                target_conn.commit()
+                                                                print(f"Successfully loaded {len(insert_data)} records")
+                                                            
+                                                            # 关闭连接
+                                                            target_conn.close()
+                                                            
+                                                            # 更新记录统计
+                                                            records_processed = len(transformed_data)
+                                                            records_success = records_processed
+                                                            records_failed = 0
+                                                        else:
+                                                            print("Failed to connect to target datasource")
+                                                            records_processed = len(transformed_data)
+                                                            records_success = 0
+                                                            records_failed = records_processed
+                                                    except Exception as e:
+                                                        print(f"Failed to load data: {e}")
+                                                        import traceback
+                                                        traceback.print_exc()
+                                                        records_processed = len(transformed_data)
+                                                        records_success = 0
+                                                        records_failed = records_processed
                                             except Exception as e:
-                                                # 如果执行查询失败，返回成功，但没有处理任何记录
                                                 print(f"Failed to execute query: {e}")
+                                                import traceback
+                                                traceback.print_exc()
                                                 records_processed = 0
                                                 records_success = 0
                                                 records_failed = 0
-                                                source_conn.close()
+                                                if source_conn is not None:
+                                                    source_conn.close()
         
         # 9. 记录执行日志
         next_log_id = conn.execute("SELECT COALESCE(MAX(id), 0) + 1 FROM etl_logs").fetchone()[0]
