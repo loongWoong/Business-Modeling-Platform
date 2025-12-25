@@ -275,3 +275,66 @@ def get_database_table_schema(datasource_type, url, table_name, username=None, p
         return True, {"fields": fields}
     except Exception as e:
         return False, f"获取表结构失败: {str(e)}"
+
+# 获取数据库表数据
+def get_database_table_data(datasource_type, url, table_name, username=None, password=None, limit=100):
+    """
+    获取数据库表数据
+    :param datasource_type: 数据源类型（mysql, postgresql, sqlserver等）
+    :param url: 数据库连接URL
+    :param table_name: 表名
+    :param username: 数据库用户名（可选）
+    :param password: 数据库密码（可选）
+    :param limit: 返回数据条数限制，默认100条
+    :return: tuple (success, data or message)
+    """
+    try:
+        data = []
+        if datasource_type == 'mysql':
+            # MySQL连接URL格式：jdbc:mysql://host:port/database 或 mysql://host:port/database
+            from urllib.parse import urlparse
+            # 处理jdbc前缀
+            if url.startswith('jdbc:'):
+                url = url[5:]
+            parsed_url = urlparse(url)
+            conn = pymysql.connect(
+                host=parsed_url.hostname,
+                port=parsed_url.port or 3306,
+                user=username or parsed_url.username,
+                password=password or parsed_url.password,
+                database=parsed_url.path.lstrip('/')
+            )
+            with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                cursor.execute(f"SELECT * FROM {table_name} LIMIT {limit}")
+                data = cursor.fetchall()
+            conn.close()
+        elif datasource_type == 'postgresql' or datasource_type == 'postgres':
+            # PostgreSQL连接URL格式：postgresql://username:password@host:port/database
+            conn = psycopg2.connect(url)
+            with conn.cursor() as cursor:
+                cursor.execute(f"SELECT * FROM {table_name} LIMIT {limit}")
+                columns = [desc[0] for desc in cursor.description]
+                rows = cursor.fetchall()
+                data = [dict(zip(columns, row)) for row in rows]
+            conn.close()
+        elif datasource_type == 'sqlserver':
+            # SQL Server连接URL格式：mssql://username:password@host:port/database
+            conn = pyodbc.connect(url)
+            with conn.cursor() as cursor:
+                cursor.execute(f"SELECT TOP {limit} * FROM {table_name}")
+                columns = [column[0] for column in cursor.description]
+                rows = cursor.fetchall()
+                data = [dict(zip(columns, row)) for row in rows]
+            conn.close()
+        elif datasource_type == 'duckdb':
+            # DuckDB连接URL格式：duckdb:///path/to/database.db 或 duckdb://memory
+            conn = duckdb.connect(url.replace('duckdb://', ''))
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT * FROM {table_name} LIMIT {limit}")
+            data = cursor.fetchdf().to_dict('records')
+            conn.close()
+        else:
+            return False, f"不支持的数据源类型: {datasource_type}"
+        return True, data
+    except Exception as e:
+        return False, f"获取表数据失败: {str(e)}"

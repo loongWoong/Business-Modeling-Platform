@@ -14,6 +14,7 @@ import RelationModal from './components/RelationModal';
 import SemanticIndicatorModal from './components/SemanticIndicatorModal';
 import DatasourceModal from './components/DatasourceModal';
 import TableListModal from './components/TableListModal';
+import TableDataModal from './components/TableDataModal';
 import DatasourceManager from './modules/DatasourceManager';
 
 const DomainWorkbench = () => {
@@ -112,6 +113,13 @@ const DomainWorkbench = () => {
   const [isTableListModalOpen, setIsTableListModalOpen] = useState(false);
   const [currentDatasource, setCurrentDatasource] = useState(null);
   const [tableList, setTableList] = useState([]);
+  
+  // 表数据模态框相关状态
+  const [isTableDataModalOpen, setIsTableDataModalOpen] = useState(false);
+  const [currentTable, setCurrentTable] = useState('');
+  const [tableData, setTableData] = useState([]);
+  const [tableColumns, setTableColumns] = useState([]);
+  const [tableDataLoading, setTableDataLoading] = useState(false);
 
   // 显示通知
   const showNotification = (message, type = 'success') => {
@@ -856,8 +864,47 @@ const DomainWorkbench = () => {
   // 处理查看表数据
   const handleViewTableData = (tableName) => {
     if (currentDatasource) {
-      console.log(`查看数据源 ${currentDatasource.name} 中表 ${tableName} 的数据`);
-      showNotification(`查看表 ${tableName} 的数据功能待实现`);
+      setCurrentTable(tableName);
+      setTableDataLoading(true);
+      
+      // 调用 API 获取表数据
+      fetch(`/api/datasource/${currentDatasource.id}/tables/${tableName}/data`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.success && result.data) {
+            // 处理返回的数据，动态生成列配置
+            const data = result.data;
+            
+            if (data.length > 0) {
+              // 从第一条数据中提取列名，生成 columns 配置
+              const columns = Object.keys(data[0]).map(key => ({
+                title: key,
+                dataIndex: key,
+                key: key,
+                ellipsis: true,
+                width: 150,
+              }));
+              
+              setTableColumns(columns);
+              setTableData(data);
+            } else {
+              setTableColumns([]);
+              setTableData([]);
+            }
+            
+            // 打开表数据模态框
+            setIsTableDataModalOpen(true);
+          } else {
+            showNotification(`获取表 ${tableName} 的数据失败: ${result.message || '未知错误'}`, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Failed to get table data:', error);
+          showNotification(`获取表 ${tableName} 的数据失败`, 'error');
+        })
+        .finally(() => {
+          setTableDataLoading(false);
+        });
     }
   };
 
@@ -1139,6 +1186,17 @@ const DomainWorkbench = () => {
         datasourceName={currentDatasource?.name || ''}
         tables={tableList}
         onTableClick={handleViewTableData}
+      />
+      
+      {/* 表数据模态框 */}
+      <TableDataModal
+        isOpen={isTableDataModalOpen}
+        onClose={() => setIsTableDataModalOpen(false)}
+        datasourceName={currentDatasource?.name || ''}
+        tableName={currentTable}
+        tableData={tableData}
+        columns={tableColumns}
+        loading={tableDataLoading}
       />
     </div>
   );

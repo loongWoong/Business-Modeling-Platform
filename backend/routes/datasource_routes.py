@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from utils import get_db_connection, get_current_date, test_database_connection, get_database_tables, get_database_table_schema
+from utils import get_db_connection, get_current_date, test_database_connection, get_database_tables, get_database_table_schema, get_database_table_data
 
 datasource_bp = Blueprint('datasource', __name__)
 
@@ -324,6 +324,35 @@ def get_table_schema(id, table_name):
             return jsonify(result)
         else:
             return jsonify({"error": result}), 500
+    finally:
+        conn.close()
+
+@datasource_bp.route('/<int:id>/tables/<table_name>/data', methods=['GET'])
+def get_table_data(id, table_name):
+    """获取数据源表数据"""
+    conn = get_db_connection()
+    try:
+        # 获取数据源信息
+        datasource = conn.execute("SELECT type, url, username, password FROM datasources WHERE id = ?", (id,)).fetchone()
+        if not datasource:
+            return jsonify({"error": "Datasource not found"}), 404
+        
+        # 从datasource中提取信息
+        datasource_type = datasource[0]
+        url = datasource[1]
+        username = datasource[2]
+        password = datasource[3]
+        
+        # 获取limit参数，默认100条
+        limit = request.args.get('limit', 100, type=int)
+        
+        # 使用utils函数获取真实的表数据
+        success, result = get_database_table_data(datasource_type, url, table_name, username, password, limit)
+        
+        if success:
+            return jsonify({"success": True, "data": result})
+        else:
+            return jsonify({"success": False, "message": result}), 500
     finally:
         conn.close()
 

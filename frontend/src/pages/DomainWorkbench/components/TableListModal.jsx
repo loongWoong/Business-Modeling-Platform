@@ -1,4 +1,5 @@
 import React from 'react';
+import { Modal, List, Button } from 'antd';
 
 const TableListModal = ({ 
   isOpen, 
@@ -7,46 +8,49 @@ const TableListModal = ({
   tables = [], 
   onTableClick 
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ width: '600px', maxHeight: '80vh', overflow: 'auto' }}>
-        <div className="modal-header">
-          <h3>{datasourceName} - 数据表列表</h3>
-          <button className="close-button" onClick={onClose}>
-            ×
-          </button>
+    <Modal
+      title={`${datasourceName} - 数据表列表`}
+      open={isOpen}
+      onCancel={onClose}
+      footer={[
+        <Button key="close" onClick={onClose}>
+          关闭
+        </Button>
+      ]}
+      width={600}
+      styles={{
+        body: { maxHeight: '60vh', overflowY: 'auto' }
+      }}
+    >
+      {tables.length > 0 ? (
+        <List
+          dataSource={tables}
+          renderItem={(table) => (
+            <List.Item
+              actions={[
+                <Button 
+                  type="primary" 
+                  size="small" 
+                  onClick={() => onTableClick(table)}
+                >
+                  查看数据
+                </Button>
+              ]}
+            >
+              <List.Item.Meta
+                title={table}
+                description="点击查看数据"
+              />
+            </List.Item>
+          )}
+        />
+      ) : (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <p>该数据源没有数据表</p>
         </div>
-        <div className="modal-body">
-          <div className="table-list">
-            {tables.length > 0 ? (
-              <ul>
-                {tables.map((table, index) => (
-                  <li 
-                    key={index} 
-                    className="table-item" 
-                    onClick={() => onTableClick(table)}
-                  >
-                    <span className="table-name">{table}</span>
-                    <button className="view-button">查看数据</button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="no-tables">
-                <p>该数据源没有数据表</p>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button className="cancel-button" onClick={onClose}>
-            关闭
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </Modal>
   );
 };
 

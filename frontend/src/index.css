@@ -1338,4 +1338,5 @@ h4 {
 }
 
 .fade-in-up {
-  animation
+  animation: fadeInUp var(--transition-base);
+}
