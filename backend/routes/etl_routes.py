@@ -475,7 +475,7 @@ def execute_etl_task(id):
                                                         # 获取目标属性名（描述名称）
                                                         target_property_desc = field_mappings[field]
                                                         # 查找对应的属性
-                                                        prop = next((p for p in properties if p[1] == target_property_desc), None)
+                                                        prop = next((p for p in properties if p[2] == target_property_desc), None)
                                                         if prop:
                                                             # 获取属性值
                                                             value = row[i]
@@ -711,7 +711,7 @@ def generate_table_definition():
             "tableName": model[1] if model[1] else model[0].lower().replace(' ', '_'),
             "columns": [
                 {
-                    "name": prop[10] if prop[10] else prop[1].lower().replace(' ', '_'),
+                    "name": prop[2],
                     "type": prop[3],
                     "required": prop[4],
                     "constraints": ["NOT NULL"] if prop[4] else [],
@@ -761,7 +761,7 @@ def get_datasource_mappings(datasource_id):
         
         # 从mappings表获取映射关系
         mappings = conn.execute(
-            "SELECT m.fieldId, p.name as targetProperty FROM mappings m JOIN properties p ON m.propertyId = p.id WHERE m.datasourceId = ? AND m.modelId = ?",
+            "SELECT m.fieldId, p.code as targetProperty FROM mappings m JOIN properties p ON m.propertyId = p.id WHERE m.datasourceId = ? AND m.modelId = ?",
             (datasource_id, model_id)
         ).fetchall()
         

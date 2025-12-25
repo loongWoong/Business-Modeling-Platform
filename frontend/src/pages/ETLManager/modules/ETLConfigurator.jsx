@@ -167,7 +167,7 @@ const ETLConfigurator = () => {
     const tableDefinition = {
       tableName: modelInfo?.code || '',
       columns: modelProperties.map(prop => ({
-        name: prop.physicalColumn || prop.name.toLowerCase().replace(/\s+/g, '_'),
+        name: prop.code,
         type: prop.type,
         required: prop.required,
         constraints: prop.constraints || []
@@ -316,7 +316,7 @@ const ETLConfigurator = () => {
                           value={fieldMappings[sourceField.name] || undefined}
                         >
                           {modelProperties.map(prop => (
-                            <Option key={prop.id} value={prop.name}>
+                            <Option key={prop.id} value={prop.code}>
                               {prop.name} ({prop.type})
                               {prop.isPrimaryKey && <span style={{ color: '#1890ff', marginLeft: '8px' }}>主键</span>}
                               {prop.isForeignKey && <span style={{ color: '#52c41a', marginLeft: '8px' }}>外键</span>}
@@ -443,4 +443,4 @@ const ETLConfigurator = () => {
   );
 };
 
-export default ETLConfigurator;
+export def

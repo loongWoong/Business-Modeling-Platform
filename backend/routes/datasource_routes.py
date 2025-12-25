@@ -390,7 +390,7 @@ def get_datasource_mappings(id):
             
             # 从mappings表获取映射关系
             mappings = conn.execute(
-                "SELECT m.fieldId, p.name as targetProperty FROM mappings m JOIN properties p ON m.propertyId = p.id WHERE m.datasourceId = ? AND m.modelId = ?",
+                "SELECT m.fieldId, p.code as targetProperty FROM mappings m JOIN properties p ON m.propertyId = p.id WHERE m.datasourceId = ? AND m.modelId = ?",
                 (id, model_id)
             ).fetchall()
             
