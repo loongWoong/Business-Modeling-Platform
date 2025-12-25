@@ -498,8 +498,13 @@ def execute_etl_task(id):
                                                 # 9. 实现数据加载逻辑：先创建目标表，然后加载数据
                                                 print(f"Attempting to load {len(transformed_data)} records into target table")
                                                 
-                                                # 获取目标数据源信息（datasource ID 17）
-                                                target_datasource = conn.execute("SELECT type, url, username, password FROM datasources WHERE id = ?", (17,)).fetchone()
+                                                # 获取全局目标数据源ID
+                                                global_target_id = conn.execute("SELECT value FROM configs WHERE key = ?", ('global_target_datasource_id',)).fetchone()
+                                                target_datasource_id = int(global_target_id[0]) if global_target_id and global_target_id[0] else 17
+                                                print(f"Using global target datasource ID: {target_datasource_id}")
+                                                
+                                                # 获取目标数据源信息
+                                                target_datasource = conn.execute("SELECT type, url, username, password FROM datasources WHERE id = ?", (target_datasource_id,)).fetchone()
                                                 if not target_datasource:
                                                     print("Target datasource not found")
                                                     records_processed = len(transformed_data)

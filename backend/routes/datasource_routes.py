@@ -239,21 +239,45 @@ def test_datasource_connection(id):
 
 @datasource_bp.route('/<int:id>/tables', methods=['GET'])
 def get_datasource_tables(id):
-    """获取数据源中的表列表"""
+    """获取数据源的表列表"""
     conn = get_db_connection()
     try:
-        # 检查数据源是否存在
+        # 查询数据源信息
         datasource = conn.execute("SELECT * FROM datasources WHERE id = ?", (id,)).fetchone()
         if not datasource:
-            return jsonify({"error": "Datasource not found"}), 404
+            return jsonify({"error": "数据源不存在"}), 404
         
-        # 获取表列表
-        success, result = get_database_tables(datasource[2], datasource[3], datasource[4], datasource[5])
-        
+        # 调用工具函数获取表列表
+        success, tables_or_error = get_database_tables(datasource[2], datasource[3], datasource[4], datasource[5])
         if success:
-            return jsonify({"success": True, "tables": result})
+            return jsonify({"success": True, "tables": tables_or_error})
         else:
-            return jsonify({"success": False, "message": result})
+            return jsonify({"success": False, "message": tables_or_error})
+    finally:
+        conn.close()
+
+@datasource_bp.route('/<int:id>/bind', methods=['PUT'])
+def bind_datasource(id):
+    """绑定数据源为全局目标数据源"""
+    conn = get_db_connection()
+    try:
+        # 验证数据源是否存在
+        datasource = conn.execute("SELECT * FROM datasources WHERE id = ?", (id,)).fetchone()
+        if not datasource:
+            return jsonify({"success": False, "message": "数据源不存在"}), 404
+        
+        # 更新全局目标数据源配置
+        conn.execute(
+            "UPDATE configs SET value = ?, updatedAt = ? WHERE key = ?", 
+            (str(id), get_current_date(), 'global_target_datasource_id')
+        )
+        conn.commit()
+        
+        return jsonify({"success": True, "message": "数据源绑定成功"})
+    except Exception as e:
+        print(f"绑定数据源失败: {e}")
+        conn.rollback()
+        return jsonify({"success": False, "message": f"绑定数据源失败: {str(e)}"}), 500
     finally:
         conn.close()
 

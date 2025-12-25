@@ -107,25 +107,25 @@ const DataManager = ({
   });
 
   // 调试properties和dataRecords的结构
-  if (properties.length > 0) {
-    console.log('Properties:', properties);
-    console.log('First property structure:', properties[0]);
-  }
-  if (dataRecords.length > 0) {
-    console.log('Data records:', dataRecords);
-    console.log('First data record structure:', dataRecords[0]);
-    // 检查每个数据记录是否包含每个属性的physicalColumn
-    if (properties.length > 0) {
-      properties.forEach((prop, index) => {
-        const phyCol = prop.physicalColumn;
-        const hasCol = phyCol in dataRecords[0];
-        const value = dataRecords[0][phyCol];
-        console.log(`Property ${index + 1} (${prop.name}): physicalColumn='${phyCol}', hasCol=${hasCol}, value=${value}`);
-      });
-    }
-  } else {
-    console.log('No data records found');
-  }
+      if (properties.length > 0) {
+        console.log('Properties:', properties);
+        console.log('First property structure:', properties[0]);
+      }
+      if (dataRecords.length > 0) {
+        console.log('Data records:', dataRecords);
+        console.log('First data record structure:', dataRecords[0]);
+        // 检查每个数据记录是否包含每个属性的code
+        if (properties.length > 0) {
+          properties.forEach((prop, index) => {
+            const propCode = prop.code || prop.name;
+            const hasCol = propCode in dataRecords[0];
+            const value = dataRecords[0][propCode];
+            console.log(`Property ${index + 1} (${prop.name}): code='${propCode}', hasCol=${hasCol}, value=${value}`);
+          });
+        }
+      } else {
+        console.log('No data records found');
+      }
 
   return (
     <div className="data-manager">
@@ -172,11 +172,15 @@ const DataManager = ({
             ) : (
               dataRecords.map(record => (
                 <tr key={record.id}>
-                  {properties.map(prop => (
-                    <td key={`${record.id}-${prop.id}`}>
-                      {record[prop.physicalColumn] !== undefined ? record[prop.physicalColumn].toString() : '-'}
-                    </td>
-                  ))}
+                  {properties.map(prop => {
+                    // 使用属性的code来访问数据记录中的字段
+                    const propCode = prop.code || prop.name;
+                    return (
+                      <td key={`${record.id}-${prop.id}`}>
+                        {record[propCode] !== undefined ? record[propCode].toString() : '-'}
+                      </td>
+                    );
+                  })}
                   <td>
                     <button className="edit" onClick={() => handleEditData(record)}>编辑</button>
                     <button className="delete" onClick={() => handleDeleteData(record.id)}>删除</button>
@@ -191,4 +195,3 @@ const DataManager = ({
   );
 };
 
-export default DataManager;

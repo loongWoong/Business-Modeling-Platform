@@ -831,6 +831,25 @@ const DomainWorkbench = () => {
       });
   };
 
+  // 处理绑定数据源为全局目标数据源
+  const handleBindDatasource = (datasource) => {
+    fetch(`/api/datasource/${datasource.id}/bind`, {
+      method: 'PUT'
+    })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          showNotification(`数据源 "${datasource.name}" 已成功绑定为全局目标数据源`);
+        } else {
+          showNotification(`绑定数据源失败: ${result.message}`, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Failed to bind datasource:', error);
+        showNotification(`绑定数据源 "${datasource.name}" 失败`, 'error');
+      });
+  };
+
   // 过滤模型
   const filteredModels = models.filter(model =>
     model.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -999,6 +1018,7 @@ const DomainWorkbench = () => {
             handleToggleDatasource={handleToggleDatasource}
             handleTestDatasourceConnection={handleTestDatasourceConnection}
             handleNavigateToTables={handleNavigateToTables}
+            handleBindDatasource={handleBindDatasource}
             setIsDatasourceModalOpen={setIsDatasourceModalOpen}
             setEditingDatasource={setEditingDatasource}
             setNewDatasource={setNewDatasource}

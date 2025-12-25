@@ -9,6 +9,7 @@ const DatasourceManager = ({
   handleToggleDatasource,
   handleTestDatasourceConnection,
   handleNavigateToTables,
+  handleBindDatasource,
   setIsDatasourceModalOpen,
   setEditingDatasource,
   setNewDatasource
@@ -86,6 +87,12 @@ const DatasourceManager = ({
                       onClick={() => handleToggleDatasource(datasource.id)}
                     >
                       {datasource.status === 'active' ? '禁用' : '启用'}
+                    </button>
+                    <button 
+                      className="bind" 
+                      onClick={() => handleBindDatasource(datasource)}
+                    >
+                      绑定
                     </button>
                     <button className="delete" onClick={() => handleDeleteDatasource(datasource.id)}>删除</button>
                   </td>
