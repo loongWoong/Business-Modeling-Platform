@@ -38,27 +38,5 @@ app.register_blueprint(model_table_association_bp, url_prefix='/api/model-table-
 def health_check():
     return jsonify({"status": "healthy"})
 
-# 提供静态文件服务
-from flask import send_from_directory
-import os
-
-# 前端静态文件目录
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'dist')
-
-# 静态文件路由
-@app.route('/assets/<path:filename>')
-def serve_assets(filename):
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'assets'), filename)
-
-# 主页面路由
-@app.route('/')
-def serve_index():
-    return send_from_directory(FRONTEND_DIR, 'index.html')
-
-# 处理所有其他路由，返回index.html，支持单页应用路由
-@app.route('/<path:path>')
-def catch_all(path):
-    return send_from_directory(FRONTEND_DIR, 'index.html')
-
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
