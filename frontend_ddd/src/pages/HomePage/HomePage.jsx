@@ -36,17 +36,25 @@ const HomePage = () => {
     try {
       setLoading(true);
       
-      const [domainsData, modelsData, datasourcesData, etlTasksData] = await Promise.all([
-        domainAPI.getAll().catch(() => []),
-        modelAPI.getAll().catch(() => ({ models: [] })),
-        datasourceAPI.getAll().catch(() => []),
-        etlAPI.getAllTasks().catch(() => [])
+      // 使用 Promise.allSettled 来确保即使某个请求失败，其他请求也能继续
+      const [domainsResult, modelsResult, datasourcesResult, etlTasksResult] = await Promise.allSettled([
+        domainAPI.getAll(),
+        modelAPI.getAll(),
+        datasourceAPI.getAll(),
+        etlAPI.getAllTasks()
       ]);
 
-      const domainsList = Array.isArray(domainsData) ? domainsData : [];
-      const modelsList = Array.isArray(modelsData) ? modelsData.models || modelsData : [];
-      const datasourcesList = Array.isArray(datasourcesData) ? datasourcesData : [];
-      const etlTasksList = Array.isArray(etlTasksData) ? etlTasksData : [];
+      const domainsList = domainsResult.status === 'fulfilled' && Array.isArray(domainsResult.value) 
+        ? domainsResult.value 
+        : [];
+      const modelsData = modelsResult.status === 'fulfilled' ? modelsResult.value : { models: [] };
+      const modelsList = Array.isArray(modelsData) ? modelsData.models || modelsData : (modelsData.models || []);
+      const datasourcesList = datasourcesResult.status === 'fulfilled' && Array.isArray(datasourcesResult.value)
+        ? datasourcesResult.value
+        : [];
+      const etlTasksList = etlTasksResult.status === 'fulfilled' && Array.isArray(etlTasksResult.value)
+        ? etlTasksResult.value
+        : [];
 
       setDomains(domainsList);
       setModels(modelsList);

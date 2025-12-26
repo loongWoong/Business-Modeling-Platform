@@ -8,7 +8,7 @@ datasource_bp = Blueprint('datasource', __name__)
 service = DatasourceService()
 
 
-@datasource_bp.route('', methods=['GET'])
+@datasource_bp.route('/', methods=['GET'])
 def get_datasources():
     """获取所有Datasource"""
     domain_id = request.args.get('domainId', type=int)
@@ -25,7 +25,7 @@ def get_datasource(datasource_id):
     return jsonify(result)
 
 
-@datasource_bp.route('', methods=['POST'])
+@datasource_bp.route('/', methods=['POST'])
 def create_datasource():
     """创建Datasource"""
     data = request.json

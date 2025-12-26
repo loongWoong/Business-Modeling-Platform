@@ -8,7 +8,7 @@ model_bp = Blueprint('model', __name__)
 service = ModelService()
 
 
-@model_bp.route('', methods=['GET'])
+@model_bp.route('/', methods=['GET'])
 def get_models():
     """获取所有Model"""
     domain_id = request.args.get('domainId', type=int)
@@ -25,7 +25,7 @@ def get_model(model_id):
     return jsonify(result)
 
 
-@model_bp.route('', methods=['POST'])
+@model_bp.route('/', methods=['POST'])
 def create_model():
     """创建Model"""
     data = request.json

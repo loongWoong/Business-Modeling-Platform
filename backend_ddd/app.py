@@ -13,7 +13,8 @@ from flask_cors import CORS
 
 # 创建Flask应用
 app = Flask(__name__)
-CORS(app)
+# 配置CORS，允许所有来源和所有方法（最简单的配置）
+CORS(app, supports_credentials=True)
 
 # 导入API路由
 from interfaces.api.model_routes import model_bp

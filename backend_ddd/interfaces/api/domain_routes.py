@@ -8,7 +8,7 @@ domain_bp = Blueprint('domain', __name__)
 service = DomainService()
 
 
-@domain_bp.route('', methods=['GET'])
+@domain_bp.route('/', methods=['GET'])
 def get_domains():
     """获取所有Domain"""
     result = service.get_all()
@@ -24,7 +24,7 @@ def get_domain(domain_id):
     return jsonify(result)
 
 
-@domain_bp.route('', methods=['POST'])
+@domain_bp.route('/', methods=['POST'])
 def create_domain():
     """创建Domain"""
     data = request.json

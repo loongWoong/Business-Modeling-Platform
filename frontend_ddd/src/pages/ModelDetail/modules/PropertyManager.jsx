@@ -1,9 +1,14 @@
 /**
- * Property管理器 - 适配DDD API
+ * Property管理器 - 适配DDD API，使用 Ant Design
  * 通过Model聚合根操作Property
  */
 import React, { useState } from 'react';
+import { Card, Button, Table, Modal, Form, Input, Select, Checkbox, Space, Typography, message, Popconfirm } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { modelAPI } from '../../../services/api';
+
+const { Option } = Select;
+const { Title } = Typography;
 
 const PropertyManager = ({ 
   model, 
@@ -13,29 +18,18 @@ const PropertyManager = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
-  const [propertyData, setPropertyData] = useState({
-    name: '',
-    code: '',
-    type: 'string',
-    required: false,
-    description: '',
-    isPrimaryKey: false,
-    isForeignKey: false,
-    defaultValue: null,
-    constraints: [],
-    sensitivityLevel: null,
-    maskRule: null,
-  });
+  const [form] = Form.useForm();
 
   // 处理创建Property
-  const handleCreateProperty = async () => {
+  const handleCreateProperty = async (values) => {
     try {
       // 新API：通过Model聚合根添加Property
-      const newProperty = await modelAPI.addProperty(model.id, propertyData);
+      const newProperty = await modelAPI.addProperty(model.id, values);
       
       setProperties([...properties, newProperty]);
       setIsModalOpen(false);
-      resetForm();
+      form.resetFields();
+      message.success('属性创建成功');
       
       // 刷新完整数据
       if (onRefresh) {
@@ -43,21 +37,18 @@ const PropertyManager = ({
       }
     } catch (error) {
       console.error('Failed to create property:', error);
-      alert('属性创建失败: ' + error.message);
+      message.error('属性创建失败: ' + error.message);
     }
   };
 
   // 处理删除Property
   const handleDeleteProperty = async (propertyId) => {
-    if (!confirm('确定要删除这个属性吗？')) {
-      return;
-    }
-
     try {
       // 新API：通过Model聚合根删除Property
       await modelAPI.removeProperty(model.id, propertyId);
       
       setProperties(properties.filter(p => p.id !== propertyId));
+      message.success('属性删除成功');
       
       // 刷新完整数据
       if (onRefresh) {
@@ -65,43 +56,42 @@ const PropertyManager = ({
       }
     } catch (error) {
       console.error('Failed to delete property:', error);
-      alert('属性删除失败: ' + error.message);
+      message.error('属性删除失败: ' + error.message);
     }
   };
 
   // 处理编辑Property
   const handleEditProperty = (property) => {
     setEditingProperty(property);
-    setPropertyData({
+    form.setFieldsValue({
       name: property.name,
       code: property.code,
       type: property.type,
-      required: property.required,
+      required: property.required || false,
       description: property.description || '',
       isPrimaryKey: property.isPrimaryKey || false,
       isForeignKey: property.isForeignKey || false,
       defaultValue: property.defaultValue,
-      constraints: property.constraints || [],
-      sensitivityLevel: property.sensitivityLevel,
-      maskRule: property.maskRule,
     });
     setIsModalOpen(true);
   };
 
   // 处理更新Property（注意：新API可能不支持直接更新，需要删除后重新创建）
-  const handleUpdateProperty = async () => {
+  const handleUpdateProperty = async (values) => {
     try {
       // 先删除旧属性
       await modelAPI.removeProperty(model.id, editingProperty.id);
       
       // 再创建新属性
-      const updatedProperty = await modelAPI.addProperty(model.id, propertyData);
+      const updatedProperty = await modelAPI.addProperty(model.id, values);
       
       setProperties(properties.map(p => 
         p.id === editingProperty.id ? updatedProperty : p
       ));
       setIsModalOpen(false);
-      resetForm();
+      form.resetFields();
+      setEditingProperty(null);
+      message.success('属性更新成功');
       
       // 刷新完整数据
       if (onRefresh) {
@@ -109,122 +99,163 @@ const PropertyManager = ({
       }
     } catch (error) {
       console.error('Failed to update property:', error);
-      alert('属性更新失败: ' + error.message);
+      message.error('属性更新失败: ' + error.message);
     }
   };
 
-  const resetForm = () => {
+  const handleModalCancel = () => {
+    setIsModalOpen(false);
+    form.resetFields();
     setEditingProperty(null);
-    setPropertyData({
-      name: '',
-      code: '',
-      type: 'string',
-      required: false,
-      description: '',
-      isPrimaryKey: false,
-      isForeignKey: false,
-      defaultValue: null,
-      constraints: [],
-      sensitivityLevel: null,
-      maskRule: null,
+  };
+
+  const handleModalOk = () => {
+    form.validateFields().then(values => {
+      if (editingProperty) {
+        handleUpdateProperty(values);
+      } else {
+        handleCreateProperty(values);
+      }
     });
   };
 
+  const columns = [
+    {
+      title: '名称',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
+    },
+    {
+      title: '必填',
+      dataIndex: 'required',
+      key: 'required',
+      render: (required) => required ? '是' : '否',
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_, record) => (
+        <Space size="middle">
+          <Button 
+            type="link" 
+            icon={<EditOutlined />}
+            onClick={() => handleEditProperty(record)}
+          >
+            编辑
+          </Button>
+          <Popconfirm
+            title="确定要删除这个属性吗？"
+            onConfirm={() => handleDeleteProperty(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button 
+              type="link" 
+              danger
+              icon={<DeleteOutlined />}
+            >
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div className="property-manager">
-      <div className="header">
-        <h2>属性管理</h2>
-        <button onClick={() => { resetForm(); setIsModalOpen(true); }}>
-          添加属性
-        </button>
-      </div>
+    <Card>
+      <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Title level={4} style={{ margin: 0 }}>属性管理</Title>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />}
+            onClick={() => {
+              form.resetFields();
+              setEditingProperty(null);
+              setIsModalOpen(true);
+            }}
+          >
+            添加属性
+          </Button>
+        </Space>
 
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>名称</th>
-            <th>Code</th>
-            <th>类型</th>
-            <th>必填</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {properties.map(property => (
-            <tr key={property.id}>
-              <td>{property.name}</td>
-              <td>{property.code}</td>
-              <td>{property.type}</td>
-              <td>{property.required ? '是' : '否'}</td>
-              <td>
-                <button onClick={() => handleEditProperty(property)}>编辑</button>
-                <button onClick={() => handleDeleteProperty(property.id)}>删除</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        <Table
+          columns={columns}
+          dataSource={properties}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+        />
 
-      {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{editingProperty ? '编辑属性' : '添加属性'}</h3>
-            
-            <div className="form-group">
-              <label>名称:</label>
-              <input
-                type="text"
-                value={propertyData.name}
-                onChange={(e) => setPropertyData({ ...propertyData, name: e.target.value })}
-              />
-            </div>
+        <Modal
+          title={editingProperty ? '编辑属性' : '添加属性'}
+          open={isModalOpen}
+          onOk={handleModalOk}
+          onCancel={handleModalCancel}
+          okText={editingProperty ? '更新' : '创建'}
+          cancelText="取消"
+        >
+          <Form
+            form={form}
+            layout="vertical"
+          >
+            <Form.Item
+              name="name"
+              label="名称"
+              rules={[{ required: true, message: '请输入属性名称' }]}
+            >
+              <Input placeholder="请输入属性名称" />
+            </Form.Item>
 
-            <div className="form-group">
-              <label>Code:</label>
-              <input
-                type="text"
-                value={propertyData.code}
-                onChange={(e) => setPropertyData({ ...propertyData, code: e.target.value })}
-              />
-            </div>
+            <Form.Item
+              name="code"
+              label="Code"
+              rules={[{ required: true, message: '请输入Code' }]}
+            >
+              <Input placeholder="请输入Code" />
+            </Form.Item>
 
-            <div className="form-group">
-              <label>类型:</label>
-              <select
-                value={propertyData.type}
-                onChange={(e) => setPropertyData({ ...propertyData, type: e.target.value })}
-              >
-                <option value="string">String</option>
-                <option value="integer">Integer</option>
-                <option value="float">Float</option>
-                <option value="boolean">Boolean</option>
-                <option value="date">Date</option>
-              </select>
-            </div>
+            <Form.Item
+              name="type"
+              label="类型"
+              rules={[{ required: true, message: '请选择类型' }]}
+            >
+              <Select placeholder="请选择类型">
+                <Option value="string">String</Option>
+                <Option value="integer">Integer</Option>
+                <Option value="float">Float</Option>
+                <Option value="boolean">Boolean</Option>
+                <Option value="date">Date</Option>
+              </Select>
+            </Form.Item>
 
-            <div className="form-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={propertyData.required}
-                  onChange={(e) => setPropertyData({ ...propertyData, required: e.target.checked })}
-                />
-                必填
-              </label>
-            </div>
+            <Form.Item
+              name="required"
+              valuePropName="checked"
+            >
+              <Checkbox>必填</Checkbox>
+            </Form.Item>
 
-            <div className="form-actions">
-              <button onClick={editingProperty ? handleUpdateProperty : handleCreateProperty}>
-                {editingProperty ? '更新' : '创建'}
-              </button>
-              <button onClick={() => { setIsModalOpen(false); resetForm(); }}>
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+            <Form.Item
+              name="description"
+              label="描述"
+            >
+              <Input.TextArea rows={3} placeholder="请输入描述" />
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Space>
+    </Card>
   );
 };
 

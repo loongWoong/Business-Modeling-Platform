@@ -8,7 +8,6 @@ import { HomeOutlined, PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined }
 import { etlAPI } from '../../services/api';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 const ETLPage = () => {
   const navigate = useNavigate();
@@ -90,72 +89,78 @@ const ETLPage = () => {
       </Card>
 
       <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="任务列表" key="tasks">
-            {tasks.length === 0 ? (
-              <Empty description="暂无ETL任务" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            ) : (
-              <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                {tasks.map(task => (
-                  <Card key={task.id}>
-                    <Space direction="vertical" style={{ width: '100%' }} size="small">
-                      <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                        <Title level={4} style={{ margin: 0 }}>{task.name}</Title>
-                        {getStatusTag(task.status)}
-                      </Space>
-                      {task.description && <Text>{task.description}</Text>}
-                      <Space direction="vertical" size="small">
-                        <Text><strong>源数据源ID:</strong> {task.sourceDatasourceId}</Text>
-                        <Text><strong>目标模型ID:</strong> {task.targetModelId}</Text>
-                        {task.lastRun && <Text><strong>最后运行:</strong> {task.lastRun}</Text>}
-                      </Space>
-                      <Space>
-                        {task.status === 'inactive' && (
-                          <Button 
-                            icon={<PlayCircleOutlined />}
-                            onClick={() => handleToggleStatus(task, 'activate')}
-                          >
-                            激活
-                          </Button>
-                        )}
-                        {task.status === 'active' && (
-                          <>
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'tasks',
+              label: '任务列表',
+              children: tasks.length === 0 ? (
+                <Empty description="暂无ETL任务" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              ) : (
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  {tasks.map(task => (
+                    <Card key={task.id}>
+                      <Space direction="vertical" style={{ width: '100%' }} size="small">
+                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                          <Title level={4} style={{ margin: 0 }}>{task.name}</Title>
+                          {getStatusTag(task.status)}
+                        </Space>
+                        {task.description && <Text>{task.description}</Text>}
+                        <Space direction="vertical" size="small">
+                          <Text><strong>源数据源ID:</strong> {task.sourceDatasourceId}</Text>
+                          <Text><strong>目标模型ID:</strong> {task.targetModelId}</Text>
+                          {task.lastRun && <Text><strong>最后运行:</strong> {task.lastRun}</Text>}
+                        </Space>
+                        <Space>
+                          {task.status === 'inactive' && (
                             <Button 
-                              type="primary"
                               icon={<PlayCircleOutlined />}
-                              onClick={() => handleToggleStatus(task, 'start')}
+                              onClick={() => handleToggleStatus(task, 'activate')}
                             >
-                              启动
+                              激活
                             </Button>
+                          )}
+                          {task.status === 'active' && (
+                            <>
+                              <Button 
+                                type="primary"
+                                icon={<PlayCircleOutlined />}
+                                onClick={() => handleToggleStatus(task, 'start')}
+                              >
+                                启动
+                              </Button>
+                              <Button 
+                                icon={<PauseCircleOutlined />}
+                                onClick={() => handleToggleStatus(task, 'pause')}
+                              >
+                                暂停
+                              </Button>
+                            </>
+                          )}
+                          {task.status === 'running' && (
+                            <Button disabled icon={<ReloadOutlined spin />}>
+                              运行中...
+                            </Button>
+                          )}
+                          {task.status === 'paused' && (
                             <Button 
-                              icon={<PauseCircleOutlined />}
-                              onClick={() => handleToggleStatus(task, 'pause')}
+                              icon={<PlayCircleOutlined />}
+                              onClick={() => handleToggleStatus(task, 'activate')}
                             >
-                              暂停
+                              恢复
                             </Button>
-                          </>
-                        )}
-                        {task.status === 'running' && (
-                          <Button disabled icon={<ReloadOutlined spin />}>
-                            运行中...
-                          </Button>
-                        )}
-                        {task.status === 'paused' && (
-                          <Button 
-                            icon={<PlayCircleOutlined />}
-                            onClick={() => handleToggleStatus(task, 'activate')}
-                          >
-                            恢复
-                          </Button>
-                        )}
+                          )}
+                        </Space>
                       </Space>
-                    </Space>
-                  </Card>
-                ))}
-              </Space>
-            )}
-          </TabPane>
-        </Tabs>
+                    </Card>
+                  ))}
+                </Space>
+              )
+            }
+          ]}
+        />
       </Card>
     </div>
   );
