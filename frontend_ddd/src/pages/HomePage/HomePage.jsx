@@ -162,7 +162,6 @@ const HomePage = () => {
             >
               <BankOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
               <Title level={4}>业务域管理</Title>
-              <Paragraph type="secondary">创建和管理业务域，组织业务模型和数据源</Paragraph>
               <Button type="primary" icon={<ArrowRightOutlined />}>
                 进入
               </Button>
@@ -176,7 +175,6 @@ const HomePage = () => {
             >
               <DatabaseOutlined style={{ fontSize: '48px', color: '#52c41a', marginBottom: '16px' }} />
               <Title level={4}>模型管理</Title>
-              <Paragraph type="secondary">创建和管理业务模型，定义属性和关系</Paragraph>
               <Button type="primary" icon={<ArrowRightOutlined />}>
                 进入
               </Button>
@@ -190,7 +188,6 @@ const HomePage = () => {
             >
               <HddOutlined style={{ fontSize: '48px', color: '#faad14', marginBottom: '16px' }} />
               <Title level={4}>数据源管理</Title>
-              <Paragraph type="secondary">配置和管理数据源连接，设置字段映射</Paragraph>
               <Button type="primary" icon={<ArrowRightOutlined />}>
                 进入
               </Button>
@@ -204,7 +201,6 @@ const HomePage = () => {
             >
               <SettingOutlined style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }} />
               <Title level={4}>ETL管理</Title>
-              <Paragraph type="secondary">配置ETL任务，监控数据同步执行</Paragraph>
               <Button type="primary" icon={<ArrowRightOutlined />}>
                 进入
               </Button>
