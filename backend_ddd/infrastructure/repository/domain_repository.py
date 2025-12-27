@@ -4,7 +4,7 @@ Domain不是聚合根，但需要持久化
 """
 from typing import Optional, List
 from infrastructure.persistence.db_connection import get_db_connection, get_current_date
-from domain.shared import Domain
+from meta.shared import Domain
 
 
 class DomainRepository:
@@ -74,4 +74,3 @@ class DomainRepository:
         return Domain(
             id=row[0], name=row[1], description=row[2], owner=row[3], updatedAt=row[4]
         )
-

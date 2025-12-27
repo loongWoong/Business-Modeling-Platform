@@ -5,7 +5,6 @@
 import sys
 import os
 
-# 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
 
@@ -13,12 +12,13 @@ def test_domain_models():
     """测试领域模型"""
     print("Testing domain models...")
     try:
-        from domain.model import Model, Property, Relation
-        from domain.datasource import Datasource, Mapping, ModelTableAssociation
-        from domain.etl import ETLTask, ETLLog
-        from domain.shared import Domain
+        from meta.model import Model, Property
+        from meta.shared import Relation
+        from meta.datasource import Datasource, ModelTableAssociation
+        from meta.shared import Mapping
+        from meta.etl import ETLTask, ETLLog
+        from meta.shared import Domain
         
-        # 测试Model创建
         model = Model(
             id=1,
             name="测试模型",
@@ -29,7 +29,6 @@ def test_domain_models():
         assert model.code == "test_model"
         print("[OK] Model creation")
         
-        # 测试Property创建和添加到Model
         property = Property(
             id=1,
             name="测试属性",
@@ -42,17 +41,14 @@ def test_domain_models():
         assert len(model.properties) == 1
         print("[OK] Property added to Model")
         
-        # 测试业务规则验证
         is_valid, error = model.validate_code()
         assert is_valid == True
         print("[OK] Model validation")
         
-        # 测试Property验证
         is_valid, error = property.validate_value("test")
         assert is_valid == True
         print("[OK] Property validation")
         
-        # 测试Datasource创建
         datasource = Datasource(
             id=1,
             name="测试数据源",
@@ -63,7 +59,6 @@ def test_domain_models():
         assert is_valid == True
         print("[OK] Datasource creation and validation")
         
-        # 测试ETLTask创建
         etl_task = ETLTask(
             id=1,
             name="测试ETL任务",
@@ -90,12 +85,10 @@ def test_repositories():
         from infrastructure.repository.model_repository import ModelRepository
         from infrastructure.repository.domain_repository import DomainRepository
         
-        # 测试Domain仓储
         domain_repo = DomainRepository()
         domains = domain_repo.find_all()
         print(f"[OK] DomainRepository.find_all() returned {len(domains)} domains")
         
-        # 测试Model仓储
         model_repo = ModelRepository()
         models = model_repo.find_all()
         print(f"[OK] ModelRepository.find_all() returned {len(models)} models")
@@ -116,12 +109,10 @@ def test_services():
         from application.model_service import ModelService
         from application.domain_service import DomainService
         
-        # 测试Domain服务
         domain_service = DomainService()
         domains = domain_service.get_all()
         print(f"[OK] DomainService.get_all() returned {len(domains)} domains")
         
-        # 测试Model服务
         model_service = ModelService()
         result = model_service.get_all()
         assert "models" in result
@@ -145,12 +136,10 @@ def main():
     
     results = []
     
-    # 运行测试
     results.append(("Domain Models", test_domain_models()))
     results.append(("Repositories", test_repositories()))
     results.append(("Services", test_services()))
     
-    # 汇总结果
     print("\n" + "=" * 60)
     print("Test Results Summary")
     print("=" * 60)
@@ -171,4 +160,3 @@ def main():
 if __name__ == '__main__':
     success = main()
     sys.exit(0 if success else 1)
-

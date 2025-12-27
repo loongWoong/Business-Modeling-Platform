@@ -4,7 +4,7 @@ Datasource定义了数据源，包含Mappings和ModelTableAssociations
 """
 from typing import Optional, List
 from datetime import date
-from .mapping import Mapping
+from ..shared import Mapping
 from .model_table_association import ModelTableAssociation
 
 

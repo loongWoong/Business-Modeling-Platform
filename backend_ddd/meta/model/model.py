@@ -5,7 +5,7 @@ Model是业务模型的原型定义，包含Properties和Relations
 from typing import Optional, List
 from datetime import date
 from .property import Property
-from .relation import Relation
+from ..shared import Relation
 
 
 class Model:

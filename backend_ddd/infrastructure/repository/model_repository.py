@@ -5,7 +5,8 @@ Model聚合仓储
 from typing import Optional, List
 from infrastructure.repository.base_repository import IRepository
 from infrastructure.persistence.db_connection import get_db_connection, get_current_date
-from domain.model import Model, Property, Relation
+from meta.model import Model, Property
+from meta.shared import Relation
 import json
 
 
@@ -16,7 +17,6 @@ class ModelRepository(IRepository[Model]):
         """根据ID查找Model聚合（包含Properties和Relations）"""
         conn = get_db_connection()
         try:
-            # 查找Model
             model_row = conn.execute(
                 "SELECT * FROM models WHERE id = ?",
                 (id,)
@@ -25,15 +25,12 @@ class ModelRepository(IRepository[Model]):
             if not model_row:
                 return None
             
-            # 创建Model聚合根
             model = self._model_from_row(model_row)
             
-            # 加载Properties
             properties = self._load_properties(conn, id)
             for prop in properties:
                 model._properties.append(prop)
             
-            # 加载Relations（作为source或target）
             relations = self._load_relations(conn, id)
             for relation in relations:
                 model._relations.append(relation)
@@ -64,12 +61,10 @@ class ModelRepository(IRepository[Model]):
                 model = self._model_from_row(row)
                 model_id = row[0]
                 
-                # 加载Properties
                 properties = self._load_properties(conn, model_id)
                 for prop in properties:
                     model._properties.append(prop)
                 
-                # 加载Relations
                 relations = self._load_relations(conn, model_id)
                 for relation in relations:
                     model._relations.append(relation)
@@ -84,21 +79,16 @@ class ModelRepository(IRepository[Model]):
         """保存Model聚合（包括Properties和Relations）"""
         conn = get_db_connection()
         try:
-            # 验证聚合
             is_valid, error = aggregate.validate_code()
             if not is_valid:
                 raise ValueError(error)
             
-            # 保存或更新Model
             if aggregate.id and self._exists(conn, aggregate.id):
                 self._update_model(conn, aggregate)
             else:
                 aggregate = self._create_model(conn, aggregate)
             
-            # 保存Properties
             self._save_properties(conn, aggregate)
-            
-            # 保存Relations（只保存以此Model为source或target的关系）
             self._save_relations(conn, aggregate)
             
             conn.commit()
@@ -110,11 +100,8 @@ class ModelRepository(IRepository[Model]):
         """删除Model聚合（包括Properties和Relations）"""
         conn = get_db_connection()
         try:
-            # 删除Relations（作为source或target）
             conn.execute("DELETE FROM relations WHERE sourceModelId = ? OR targetModelId = ?", (id, id))
-            # 删除Properties
             conn.execute("DELETE FROM properties WHERE modelId = ?", (id,))
-            # 删除Model
             result = conn.execute("DELETE FROM models WHERE id = ?", (id,))
             conn.commit()
             return result.rowcount > 0
@@ -122,12 +109,10 @@ class ModelRepository(IRepository[Model]):
             conn.close()
     
     def _exists(self, conn, id: int) -> bool:
-        """检查Model是否存在"""
         result = conn.execute("SELECT COUNT(*) FROM models WHERE id = ?", (id,)).fetchone()
         return result[0] > 0
     
     def _create_model(self, conn, model: Model) -> Model:
-        """创建Model"""
         next_id = conn.execute("SELECT COALESCE(MAX(id), 0) + 1 FROM models").fetchone()[0]
         model.id = next_id
         
@@ -146,7 +131,6 @@ class ModelRepository(IRepository[Model]):
         return model
     
     def _update_model(self, conn, model: Model) -> None:
-        """更新Model"""
         conn.execute(
             "UPDATE models SET name = ?, code = ?, description = ?, updatedAt = ? WHERE id = ?",
             (
@@ -159,17 +143,13 @@ class ModelRepository(IRepository[Model]):
         )
     
     def _save_properties(self, conn, model: Model) -> None:
-        """保存Properties"""
-        # 获取现有的Properties
         existing_props = {p.id: p for p in self._load_properties(conn, model.id)}
         current_prop_ids = {p.id for p in model.properties}
         
-        # 删除不再存在的Properties
         for prop_id in existing_props:
             if prop_id not in current_prop_ids:
                 conn.execute("DELETE FROM properties WHERE id = ?", (prop_id,))
         
-        # 保存或更新Properties
         for prop in model.properties:
             if prop.id and prop.id in existing_props:
                 self._update_property(conn, prop)
@@ -177,7 +157,6 @@ class ModelRepository(IRepository[Model]):
                 self._create_property(conn, prop)
     
     def _create_property(self, conn, prop: Property) -> None:
-        """创建Property"""
         next_id = conn.execute("SELECT COALESCE(MAX(id), 0) + 1 FROM properties").fetchone()[0]
         prop.id = next_id
         
@@ -198,7 +177,6 @@ class ModelRepository(IRepository[Model]):
         )
     
     def _update_property(self, conn, prop: Property) -> None:
-        """更新Property"""
         constraints_json = json.dumps(prop.constraints) if prop.constraints else None
         
         conn.execute(
@@ -215,17 +193,13 @@ class ModelRepository(IRepository[Model]):
         )
     
     def _save_relations(self, conn, model: Model) -> None:
-        """保存Relations（只保存以此Model为source或target的关系）"""
-        # 获取现有的Relations
         existing_relations = {r.id: r for r in self._load_relations(conn, model.id)}
         current_relation_ids = {r.id for r in model.relations}
         
-        # 删除不再存在的关系
         for rel_id in existing_relations:
             if rel_id not in current_relation_ids:
                 conn.execute("DELETE FROM relations WHERE id = ?", (rel_id,))
         
-        # 保存或更新Relations
         for relation in model.relations:
             if relation.id and relation.id in existing_relations:
                 self._update_relation(conn, relation)
@@ -233,7 +207,6 @@ class ModelRepository(IRepository[Model]):
                 self._create_relation(conn, relation)
     
     def _create_relation(self, conn, relation: Relation) -> None:
-        """创建Relation"""
         next_id = conn.execute("SELECT COALESCE(MAX(id), 0) + 1 FROM relations").fetchone()[0]
         relation.id = next_id
         
@@ -246,14 +219,12 @@ class ModelRepository(IRepository[Model]):
         )
     
     def _update_relation(self, conn, relation: Relation) -> None:
-        """更新Relation"""
         conn.execute(
             "UPDATE relations SET name = ?, type = ?, description = ?, enabled = ? WHERE id = ?",
             (relation.name, relation.type, relation.description, relation.enabled, relation.id)
         )
     
     def _load_properties(self, conn, model_id: int) -> List[Property]:
-        """加载Properties"""
         rows = conn.execute("SELECT * FROM properties WHERE modelId = ?", (model_id,)).fetchall()
         properties = []
         for row in rows:
@@ -262,7 +233,6 @@ class ModelRepository(IRepository[Model]):
         return properties
     
     def _load_relations(self, conn, model_id: int) -> List[Relation]:
-        """加载Relations（作为source或target）"""
         rows = conn.execute(
             "SELECT * FROM relations WHERE sourceModelId = ? OR targetModelId = ?",
             (model_id, model_id)
@@ -274,7 +244,6 @@ class ModelRepository(IRepository[Model]):
         return relations
     
     def _model_from_row(self, row: tuple) -> Model:
-        """从数据库行创建Model"""
         return Model(
             id=row[0],
             name=row[1],
@@ -286,9 +255,8 @@ class ModelRepository(IRepository[Model]):
         )
     
     def _property_from_row(self, row: tuple) -> Property:
-        """从数据库行创建Property"""
         constraints = None
-        if row[10]:  # constraints字段
+        if row[10]:
             try:
                 constraints = json.loads(row[10])
             except:
@@ -314,7 +282,6 @@ class ModelRepository(IRepository[Model]):
         )
     
     def _relation_from_row(self, row: tuple) -> Relation:
-        """从数据库行创建Relation"""
         return Relation(
             id=row[0],
             name=row[1],
@@ -324,4 +291,3 @@ class ModelRepository(IRepository[Model]):
             description=row[5],
             enabled=bool(row[6]) if row[6] is not None else True
         )
-

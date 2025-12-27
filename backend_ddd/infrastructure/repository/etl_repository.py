@@ -5,7 +5,7 @@ ETL聚合仓储
 from typing import Optional, List
 from infrastructure.repository.base_repository import IRepository
 from infrastructure.persistence.db_connection import get_db_connection, get_current_date
-from domain.etl import ETLTask, ETLLog
+from meta.etl import ETLTask, ETLLog
 import json
 
 
@@ -153,7 +153,7 @@ class ETLRepository(IRepository[ETLTask]):
     
     def _task_from_row(self, row: tuple) -> ETLTask:
         config = None
-        if row[7]:  # config字段
+        if row[7]:
             try:
                 config = json.loads(row[7])
             except:
@@ -171,4 +171,3 @@ class ETLRepository(IRepository[ETLTask]):
             recordsProcessed=row[5], recordsSuccess=row[6], recordsFailed=row[7],
             errorMessage=row[8], details=row[9]
         )
-

@@ -4,7 +4,6 @@
 import sys
 import os
 
-# 添加当前目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
 
@@ -13,32 +12,34 @@ def test_imports():
     errors = []
     
     try:
-        from domain.model import Model, Property, Relation
-        print("[OK] domain.model import successful")
+        from meta.model import Model, Property
+        from meta.shared import Relation
+        print("[OK] meta.model import successful")
     except Exception as e:
-        errors.append(f"domain.model: {e}")
-        print(f"[FAIL] domain.model import failed: {e}")
+        errors.append(f"meta.model: {e}")
+        print(f"[FAIL] meta.model import failed: {e}")
     
     try:
-        from domain.datasource import Datasource, Mapping, ModelTableAssociation
-        print("[OK] domain.datasource import successful")
+        from meta.datasource import Datasource, ModelTableAssociation
+        from meta.shared import Mapping
+        print("[OK] meta.datasource import successful")
     except Exception as e:
-        errors.append(f"domain.datasource: {e}")
-        print(f"[FAIL] domain.datasource import failed: {e}")
+        errors.append(f"meta.datasource: {e}")
+        print(f"[FAIL] meta.datasource import failed: {e}")
     
     try:
-        from domain.etl import ETLTask, ETLLog
-        print("[OK] domain.etl import successful")
+        from meta.etl import ETLTask, ETLLog
+        print("[OK] meta.etl import successful")
     except Exception as e:
-        errors.append(f"domain.etl: {e}")
-        print(f"[FAIL] domain.etl import failed: {e}")
+        errors.append(f"meta.etl: {e}")
+        print(f"[FAIL] meta.etl import failed: {e}")
     
     try:
-        from domain.shared import Domain
-        print("[OK] domain.shared import successful")
+        from meta.shared import Domain
+        print("[OK] meta.shared import successful")
     except Exception as e:
-        errors.append(f"domain.shared: {e}")
-        print(f"[FAIL] domain.shared import failed: {e}")
+        errors.append(f"meta.shared: {e}")
+        print(f"[FAIL] meta.shared import failed: {e}")
     
     try:
         from infrastructure.repository.model_repository import ModelRepository
@@ -78,4 +79,3 @@ if __name__ == '__main__':
     print("=" * 50)
     success = test_imports()
     sys.exit(0 if success else 1)
-

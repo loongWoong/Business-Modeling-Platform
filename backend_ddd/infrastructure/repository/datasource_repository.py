@@ -5,7 +5,8 @@ Datasource聚合仓储
 from typing import Optional, List
 from infrastructure.repository.base_repository import IRepository
 from infrastructure.persistence.db_connection import get_db_connection, get_current_date
-from domain.datasource import Datasource, Mapping, ModelTableAssociation
+from meta.datasource import Datasource, ModelTableAssociation
+from meta.shared import Mapping
 
 
 class DatasourceRepository(IRepository[Datasource]):
@@ -21,12 +22,10 @@ class DatasourceRepository(IRepository[Datasource]):
             
             datasource = self._datasource_from_row(row)
             
-            # 加载Mappings
             mappings = self._load_mappings(conn, id)
             for mapping in mappings:
                 datasource._mappings.append(mapping)
             
-            # 加载ModelTableAssociations
             associations = self._load_associations(conn, id)
             for assoc in associations:
                 datasource._modelTableAssociations.append(assoc)
@@ -208,4 +207,3 @@ class DatasourceRepository(IRepository[Datasource]):
             id=row[0], modelId=row[1], datasourceId=row[2], tableName=row[3],
             status=row[4], createdAt=row[5], updatedAt=row[6]
         )
-

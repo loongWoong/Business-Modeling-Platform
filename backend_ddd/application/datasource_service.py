@@ -4,7 +4,8 @@ Datasource应用服务
 """
 from typing import Optional, List, Dict
 from infrastructure.repository.datasource_repository import DatasourceRepository
-from domain.datasource import Datasource, Mapping, ModelTableAssociation
+from meta.datasource import Datasource, ModelTableAssociation
+from meta.shared import Mapping
 from infrastructure.persistence.db_connection import get_current_date
 
 
@@ -128,4 +129,3 @@ class DatasourceService:
     def delete_datasource(self, id: int) -> bool:
         """删除Datasource"""
         return self.repository.delete(id)
-

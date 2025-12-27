@@ -4,7 +4,8 @@ Model应用服务
 """
 from typing import Optional, List, Dict
 from infrastructure.repository.model_repository import ModelRepository
-from domain.model import Model, Property, Relation
+from meta.model import Model, Property
+from meta.shared import Relation
 from infrastructure.persistence.db_connection import get_current_date
 
 
@@ -19,7 +20,6 @@ class ModelService:
         filters = {"domainId": domain_id} if domain_id else None
         models = self.repository.find_all(filters)
         
-        # 构建边信息
         edges = []
         for model in models:
             for relation in model.relations:
@@ -107,7 +107,6 @@ class ModelService:
         model.add_property(property)
         model = self.repository.save(model)
         
-        # 返回新添加的property
         added_prop = model.get_property_by_code(property.code)
         return added_prop.to_dict() if added_prop else None
     
@@ -133,7 +132,6 @@ class ModelService:
             "enabled": data.get("enabled", True)
         })
         
-        # 添加到source Model
         source_model = self.repository.find_by_id(relation.sourceModelId)
         if not source_model:
             return None
@@ -141,13 +139,11 @@ class ModelService:
         source_model.add_relation(relation)
         source_model = self.repository.save(source_model)
         
-        # 返回新添加的relation
         added_rel = next((r for r in source_model.relations if r.id == relation.id), None)
         return added_rel.to_dict() if added_rel else None
     
     def remove_relation(self, relation_id: int) -> bool:
         """删除Relation"""
-        # 需要找到包含此relation的model
         models = self.repository.find_all()
         for model in models:
             if any(r.id == relation_id for r in model.relations):
@@ -155,4 +151,3 @@ class ModelService:
                 self.repository.save(model)
                 return True
         return False
-

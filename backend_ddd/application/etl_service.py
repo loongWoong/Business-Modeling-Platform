@@ -4,7 +4,7 @@ ETL应用服务
 """
 from typing import Optional, List, Dict
 from infrastructure.repository.etl_repository import ETLRepository
-from domain.etl import ETLTask, ETLLog
+from meta.etl import ETLTask, ETLLog
 from infrastructure.persistence.db_connection import get_current_date
 
 
@@ -112,4 +112,3 @@ class ETLService:
         
         latest_log = task.get_latest_log()
         return latest_log.to_dict() if latest_log else None
-

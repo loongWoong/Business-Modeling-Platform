@@ -4,7 +4,7 @@ Domain应用服务
 """
 from typing import Optional, List, Dict
 from infrastructure.repository.domain_repository import DomainRepository
-from domain.shared import Domain
+from meta.shared import Domain
 from infrastructure.persistence.db_connection import get_current_date
 
 
@@ -54,4 +54,3 @@ class DomainService:
     def delete_domain(self, id: int) -> bool:
         """删除Domain"""
         return self.repository.delete(id)
-
