@@ -1,6 +1,6 @@
-# Business-Modeling-Platform
-参考palantir的本体论思想构建的业务建模平台，用于驱动数据治理平台应用。
-Business-Modeling-Platform 是一个基于React、Ant Design和D3.js的现代化领域驱动设计(DDD)可视化建模工具。该工具提供了业务域地图、模型管理、属性定义、关系配置以及语义指标等功能，帮助团队更好地进行领域建模和系统设计。
+# 业务建模平台 (Business-Modeling-Platform)
+
+参考palantir的本体论思想构建的业务建模平台，用于驱动数据治理平台应用。基于React、Ant Design和D3.js的现代化领域驱动设计(DDD)可视化建模工具。
 
 ## 功能特性
 
@@ -27,186 +27,214 @@ Business-Modeling-Platform 是一个基于React、Ant Design和D3.js的现代化
 
 ## 技术栈
 
-- **前端框架**: React 18
-- **路由管理**: React Router v6
-- **图表库**: D3.js v7
+### 前端
+- **框架**: React 18 + Vite
 - **UI组件库**: Ant Design 6
+- **图表库**: D3.js v7
+- **路由**: React Router v6
 - **样式**: CSS3 Variables, Flexbox, Grid
-- **构建工具**: Vite
 
-## 界面设计亮点
+### 后端 (Java)
+- **框架**: Spring Boot 2.7.18
+- **JDK版本**: 1.8
+- **数据库**: H2 File Database
+- **ORM**: Hibernate 5.6 + Spring Data JPA
+- **API文档**: Springdoc OpenAPI 1.6.15
 
-### 现代化设计语言
-- 采用现代化的色彩体系和设计规范
-- 统一的间距和圆角系统
-- 流畅的交互动画效果
-- 响应式布局适配不同屏幕尺寸
+### 后端 (Python)
+- **框架**: Flask / FastAPI (可选)
+- **Python版本**: 3.10+
 
-### 视觉组件
-- 卡片式布局设计
-- 表格组件优化
-- 模态框和抽屉组件
-- 状态徽章系统
-- 面包屑导航
+## 环境要求
 
-### 图形可视化
-- D3.js力导向图展示复杂关系
-- 节点拖拽交互
-- 自适应窗口大小调整
-- 不同类型节点的视觉区分
-- 支持ER图和UML图展示
+| 组件 | 版本要求 |
+|------|----------|
+| Node.js | 16+ |
+| npm | 8+ |
+| JDK | 1.8 |
+| Maven | 3.6+ |
+| Python | 3.10+ |
 
-## 文件结构
+## 项目结构
 
 ```
-frontend/
-├── src/
-│   ├── components/          # 通用组件
-│   │   └── Pagination.jsx   # 分页组件
-│   ├── pages/               # 页面组件
-│   │   ├── DomainMap/       # 业务域地图
-│   │   │   └── DomainMap.jsx
-│   │   ├── DomainWorkbench/ # 域工作台
-│   │   │   ├── components/  # 工作台组件
-│   │   │   │   ├── ConfirmDialog.jsx
-│   │   │   │   ├── HoverDrawer.jsx
-│   │   │   │   ├── ModelModal.jsx
-│   │   │   │   ├── Notification.jsx
-│   │   │   │   ├── RelationModal.jsx
-│   │   │   │   ├── SemanticIndicatorModal.jsx
-│   │   │   │   └── SharedAttributeModal.jsx
-│   │   │   ├── modules/     # 工作台模块
-│   │   │   │   ├── ERDiagram.jsx
-│   │   │   │   ├── ForceDirectedGraph.jsx
-│   │   │   │   ├── ModelManager.jsx
-│   │   │   │   ├── ModelMap.jsx
-│   │   │   │   ├── RelationManager.jsx
-│   │   │   │   ├── SemanticIndicatorManager.jsx
-│   │   │   │   ├── SharedAttributeManager.jsx
-│   │   │   │   └── UMLDiagram.jsx
-│   │   │   └── DomainWorkbench.jsx
-│   │   └── ModelDetail/     # 模型详情
-│   │       ├── components/  # 详情组件
-│   │       │   ├── DataModal.jsx
-│   │       │   ├── DatasourceModal.jsx
-│   │       │   ├── IndicatorModal.jsx
-│   │       │   ├── MappingModal.jsx
-│   │       │   ├── ModalWrapper.jsx
-│   │       │   ├── Notification.jsx
-│   │       │   ├── PropertyModal.jsx
-│   │       │   ├── RelationModal.jsx
-│   │       │   └── index.js
-│   │       ├── modules/     # 详情模块
-│   │       │   ├── ActionManager.jsx
-│   │       │   ├── BloodlineAnalyzer.jsx
-│   │       │   ├── DataManager.jsx
-│   │       │   ├── DatasourceManager.jsx
-│   │       │   ├── PropertyManager.jsx
-│   │       │   ├── RelationManager.jsx
-│   │       │   ├── SemanticIndicatorManager.jsx
-│   │       │   ├── SharedAttributeReference.jsx
-│   │       │   └── index.js
-│   │       └── ModelDetail.jsx
-│   ├── App.jsx              # 应用根组件
-│   ├── index.css            # 全局样式文件
-│   └── main.jsx             # 应用入口文件
-├── index.html               # HTML模板
-├── package.json             # 项目依赖配置
-└── vite.config.js            # 构建配置
+jianmo-demo/
+├── frontend/                 # 前端项目 (React)
+│   ├── src/
+│   │   ├── components/       # 通用组件
+│   │   ├── pages/            # 页面组件
+│   │   │   ├── DomainMap/    # 业务域地图
+│   │   │   ├── DomainWorkbench/  # 域工作台
+│   │   │   └── ModelDetail/  # 模型详情
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+│
+├── backend_java/             # 后端服务 (Java)
+│   ├── src/main/java/
+│   │   └── com/jianmo/platform/
+│   │       ├── config/       # 配置类
+│   │       ├── controller/   # REST API控制器
+│   │       ├── dto/          # 数据传输对象
+│   │       ├── entity/       # 实体类
+│   │       ├── repository/   # 数据访问层
+│   │       └── service/      # 业务逻辑层
+│   ├── src/main/resources/
+│   │   ├── application.yml   # 应用配置
+│   │   └── db/init/          # 数据库初始化脚本
+│   └── pom.xml
+│
+├── backend_python/           # 后端服务 (Python) - 可选
+│   ├── app.py
+│   ├── requirements.txt
+│   └── ...
+│
+└── README.md
 ```
 
 ## 快速开始
 
-1. 安装依赖：
-   ```bash
-   cd frontend
-   npm install
-   ```
+### 1. 前端配置与启动
 
-2. 启动开发服务器：
-   ```bash
-   npm run dev
-   ```
+```bash
+cd frontend
 
-3. 构建生产版本：
-   ```bash
-   npm run build
-   ```
+# 安装依赖
+npm install
 
-4. 预览生产构建：
-   ```bash
-   npm run preview
-   ```
+# 启动开发服务器
+npm run dev
 
-## 后端服务
+# 构建生产版本
+npm run build
 
-项目包含简单的后端服务，用于支持前端功能：
+# 预览生产构建
+npm run preview
+```
 
-1. 安装后端依赖：
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   ```
+开发服务器启动后访问: http://localhost:5173
 
-2. 启动后端服务：
-   ```bash
-   python app.py
-   ```
+### 2. 后端服务 (Java) 配置与启动
 
-## 样式系统
+#### 环境检查
+```bash
+# 检查Java版本 (需要JDK 1.8)
+java -version
 
-项目采用CSS变量定义了一套完整的现代化设计系统：
+# 检查Maven版本
+mvn -version
+```
 
-### 颜色系统
-- 主色调：蓝色系 (#3b82f6)
-- 成功色：绿色系 (#10b981)
-- 警告色：橙色系 (#f59e0b)
-- 危险色：红色系 (#ef4444)
-- 中性色：灰度色系 (50-900)
+#### 编译与启动
+```bash
+cd backend_java
 
-### 字体系统
-- 主字体：Inter, -apple-system, BlinkMacSystemFont等现代字体族
-- 字号层级：xs, sm, base, lg, xl, 2xl
-- 行高：1.5倍行高
+# 编译项目
+mvn clean compile
 
-### 间距系统
-- 间距变量：spacing-1 到 spacing-10 (4px-40px)
-- 圆角变量：sm, md, lg, xl, full
+# 启动服务
+mvn spring-boot:run
+```
 
-### 阴影系统
-- sm: 微弱阴影
-- md: 中等阴影
-- lg: 明显阴影
-- xl: 强烈阴影
+服务启动后访问: http://localhost:5001
 
-## 交互设计
+API文档: http://localhost:5001/swagger-ui.html
 
-### 悬停效果
-- 按钮悬停变色和微动效
-- 卡片悬停上浮和阴影增强
-- 表格行悬停背景变化
+### 3. 后端服务 (Python) - 可选
 
-### 动画效果
-- 模态框淡入动画
-- 抽屉滑入滑出动画
-- 页面切换过渡效果
+```bash
+cd backend_python
+
+# 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# 或: venv\Scripts\activate  # Windows
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 启动服务
+python app.py
+```
+
+## 数据库配置
+
+### H2 数据库
+
+项目默认使用 H2 文件数据库，数据库文件位于：
+```
+backend_java/src/main/resources/app.mv.db
+```
+
+配置文件位置：`backend_java/src/main/resources/application.yml`
+
+关键配置：
+```yaml
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:file:路径/to/app;AUTO_SERVER=TRUE
+    username: sa
+    password:
+```
+
+### 初始化数据
+
+首次启动时，Spring Boot 会自动执行 `db/init/schema.sql` 脚本创建表结构并插入初始数据。
+
+## 常用Maven命令
+
+```bash
+# 清理并编译
+mvn clean compile
+
+# 运行测试
+mvn test
+
+# 打包
+mvn package -DskipTests
+
+# 跳过测试打包
+mvn clean package -DskipTests
+
+# 依赖分析
+mvn dependency:tree
+
+# 更新依赖
+mvn clean compile -U
+```
+
+## 常见问题
+
+### Q: JDK版本不兼容
+A: 确保使用JDK 1.8，可通过 `export JAVA_HOME=/path/to/jdk1.8` 设置。
+
+### Q: Maven编译失败
+A: 尝试清理本地仓库缓存：
+```bash
+mvn clean
+```
+
+### Q: 端口被占用
+A: 修改 `application.yml` 中的 `server.port` 配置。
+
+### Q: 数据库连接错误
+A: 确保数据库文件路径正确，且有读写权限。
 
 ## 开发规范
 
-### 组件设计
-- 功能组件化，职责单一
-- 状态管理清晰
-- 事件处理规范
+### Java开发规范
+- 使用 Lombok 简化代码
+- 遵循 JPA 命名策略
+- 使用 Validation 进行参数校验
+- 统一返回 Result<T> 格式
 
-### 样式规范
-- 使用CSS变量统一管理样式
-- 类名命名语义化
-- 避免内联样式，优先使用CSS类
-
-### 图形交互
-- D3.js图形元素响应式设计
-- 节点拖拽行为一致性
-- 图形元素点击事件处理
+### 前端开发规范
+- 组件功能单一，职责明确
+- 使用 CSS 变量统一管理样式
+- D3.js 图形元素响应式设计
 
 ## 浏览器兼容性
 
@@ -221,4 +249,4 @@ MIT License
 
 ## 贡献指南
 
-欢迎提交Issue和Pull Request来改进这个项目。
+欢迎提交 Issue 和 Pull Request 来改进这个项目。
