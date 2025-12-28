@@ -15,6 +15,9 @@ import lombok.AllArgsConstructor;
 public class Domain extends BaseEntity {
 
     @Column(nullable = false, unique = true)
+    private String code;
+
+    @Column(nullable = false)
     private String name;
 
     @Column(columnDefinition = "TEXT")
@@ -22,7 +25,8 @@ public class Domain extends BaseEntity {
 
     private String owner;
 
-    public Domain(String name, String description, String owner) {
+    public Domain(String code, String name, String description, String owner) {
+        this.code = code;
         this.name = name;
         this.description = description;
         this.owner = owner;

@@ -9,7 +9,7 @@ spring:
 
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:file:/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/src/main/resources/app;AUTO_SERVER=TRUE
+    url: jdbc:h2:tcp://localhost:9092/app
     username: sa
     password:
     hikari:

@@ -40,11 +40,15 @@ public class DomainServiceImpl implements DomainService {
     @Override
     @Transactional
     public DomainVO createDomain(DomainCreateDTO dto) {
+        if (domainRepository.existsByCode(dto.getCode())) {
+            throw new BusinessException("领域编码已存在: " + dto.getCode());
+        }
         if (domainRepository.existsByName(dto.getName())) {
             throw new BusinessException("领域名称已存在: " + dto.getName());
         }
 
         Domain domain = new Domain();
+        domain.setCode(dto.getCode());
         domain.setName(dto.getName());
         domain.setDescription(dto.getDescription());
         domain.setOwner(dto.getOwner());
@@ -62,7 +66,16 @@ public class DomainServiceImpl implements DomainService {
         Domain domain = domainRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("领域不存在: " + id));
 
-        if (dto.getName() != null) {
+        if (dto.getCode() != null && !dto.getCode().equals(domain.getCode())) {
+            if (domainRepository.existsByCode(dto.getCode())) {
+                throw new BusinessException("领域编码已存在: " + dto.getCode());
+            }
+            domain.setCode(dto.getCode());
+        }
+        if (dto.getName() != null && !dto.getName().equals(domain.getName())) {
+            if (domainRepository.existsByName(dto.getName())) {
+                throw new BusinessException("领域名称已存在: " + dto.getName());
+            }
             domain.setName(dto.getName());
         }
         if (dto.getDescription() != null) {
@@ -91,6 +104,7 @@ public class DomainServiceImpl implements DomainService {
     private DomainVO convertToVO(Domain domain) {
         DomainVO vo = new DomainVO();
         vo.setId(domain.getId());
+        vo.setCode(domain.getCode());
         vo.setName(domain.getName());
         vo.setDescription(domain.getDescription());
         vo.setOwner(domain.getOwner());

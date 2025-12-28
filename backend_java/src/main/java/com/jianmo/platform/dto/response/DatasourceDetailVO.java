@@ -8,4 +8,5 @@ import java.util.List;
 public class DatasourceDetailVO {
     private DatasourceVO datasource;
     private List<MappingVO> mappings;
+    private List<AssociationVO> associations;
 }

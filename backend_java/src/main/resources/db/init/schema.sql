@@ -16,7 +16,8 @@ DROP TABLE IF EXISTS domains;
 -- 创建领域表
 CREATE TABLE domains (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
     description TEXT,
     owner VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -165,9 +166,9 @@ CREATE INDEX idx_etl_tasks_target ON etl_tasks(target_model_id);
 CREATE INDEX idx_etl_logs_task_id ON etl_logs(task_id);
 
 -- 插入初始数据
-INSERT INTO domains (name, description, owner) VALUES
-('默认领域', '系统默认领域', 'admin'),
-('用户管理', '用户和权限管理领域', 'admin');
+INSERT INTO domains (code, name, description, owner) VALUES
+('default', '默认领域', '系统默认领域', 'admin'),
+('user_management', '用户管理', '用户和权限管理领域', 'admin');
 
 INSERT INTO models (code, name, description, creator, domain_id) VALUES
 ('user', '用户模型', '系统用户定义', 'admin', 1),

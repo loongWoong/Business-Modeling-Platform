@@ -104,6 +104,7 @@ public class MetaModelFactory {
 
         List<MetaProperty> properties = new ArrayList<>();
         properties.add(createProperty("id", "领域ID", "LONG", true, true, null, null, null));
+        properties.add(createProperty("code", "领域编码", "STRING", true, true, 1, 50, "^[a-zA-Z][a-zA-Z0-9_]*$"));
         properties.add(createProperty("name", "领域名称", "STRING", true, true, 1, 100, null));
         properties.add(createProperty("description", "描述", "STRING", false, false, 0, 500, null));
         properties.add(createProperty("owner", "所有者", "STRING", false, false, 0, 100, null));

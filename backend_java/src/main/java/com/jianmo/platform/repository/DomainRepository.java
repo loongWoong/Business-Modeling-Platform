@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface DomainRepository extends JpaRepository<Domain, Long> {
     Optional<Domain> findByName(String name);
     List<Domain> findByOwner(String owner);
+    boolean existsByCode(String code);
     boolean existsByName(String name);
 }

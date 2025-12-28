@@ -3,14 +3,17 @@ package com.jianmo.platform.service.impl;
 import com.jianmo.platform.dto.request.DatasourceCreateDTO;
 import com.jianmo.platform.dto.request.DatasourceUpdateDTO;
 import com.jianmo.platform.dto.request.MappingCreateDTO;
+import com.jianmo.platform.dto.response.AssociationVO;
 import com.jianmo.platform.dto.response.DatasourceDetailVO;
 import com.jianmo.platform.dto.response.DatasourceVO;
 import com.jianmo.platform.dto.response.MappingVO;
 import com.jianmo.platform.entity.Datasource;
 import com.jianmo.platform.entity.Mapping;
+import com.jianmo.platform.entity.ModelTableAssociation;
 import com.jianmo.platform.common.exception.BusinessException;
 import com.jianmo.platform.repository.DatasourceRepository;
 import com.jianmo.platform.repository.MappingRepository;
+import com.jianmo.platform.repository.ModelTableAssociationRepository;
 import com.jianmo.platform.service.DatasourceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +29,13 @@ public class DatasourceServiceImpl implements DatasourceService {
 
     private final DatasourceRepository datasourceRepository;
     private final MappingRepository mappingRepository;
+    private final ModelTableAssociationRepository associationRepository;
 
-    public DatasourceServiceImpl(DatasourceRepository datasourceRepository, MappingRepository mappingRepository) {
+    public DatasourceServiceImpl(DatasourceRepository datasourceRepository, MappingRepository mappingRepository,
+                                  ModelTableAssociationRepository associationRepository) {
         this.datasourceRepository = datasourceRepository;
         this.mappingRepository = mappingRepository;
+        this.associationRepository = associationRepository;
     }
 
     @Override
@@ -49,11 +55,15 @@ public class DatasourceServiceImpl implements DatasourceService {
                 .orElseThrow(() -> new BusinessException("数据源不存在: " + id));
 
         List<Mapping> mappings = mappingRepository.findByDatasourceId(id);
+        List<ModelTableAssociation> associations = associationRepository.findByDatasourceId(id);
 
         DatasourceDetailVO vo = new DatasourceDetailVO();
         vo.setDatasource(convertToVO(datasource));
         vo.setMappings(mappings.stream()
                 .map(this::convertToMappingVO)
+                .collect(Collectors.toList()));
+        vo.setAssociations(associations.stream()
+                .map(this::convertToAssociationVO)
                 .collect(Collectors.toList()));
         return vo;
     }
@@ -218,6 +228,18 @@ public class DatasourceServiceImpl implements DatasourceService {
         vo.setModelId(mapping.getModelId());
         vo.setFieldId(mapping.getFieldId());
         vo.setPropertyId(mapping.getPropertyId());
+        return vo;
+    }
+
+    private AssociationVO convertToAssociationVO(ModelTableAssociation association) {
+        AssociationVO vo = new AssociationVO();
+        vo.setId(association.getId());
+        vo.setModelId(association.getModelId());
+        vo.setDatasourceId(association.getDatasourceId());
+        vo.setTableName(association.getTableName());
+        vo.setStatus(association.getStatus());
+        vo.setCreatedAt(association.getCreatedAt() != null ? association.getCreatedAt().toString() : null);
+        vo.setUpdatedAt(association.getUpdatedAt() != null ? association.getUpdatedAt().toString() : null);
         return vo;
     }
 }

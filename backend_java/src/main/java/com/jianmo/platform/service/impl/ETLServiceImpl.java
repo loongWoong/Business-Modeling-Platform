@@ -1,6 +1,7 @@
 package com.jianmo.platform.service.impl;
 
 import com.jianmo.platform.dto.request.ETLTaskCreateDTO;
+import com.jianmo.platform.dto.response.ETLLogVO;
 import com.jianmo.platform.dto.response.ETLTaskDetailVO;
 import com.jianmo.platform.dto.response.ETLTaskVO;
 import com.jianmo.platform.entity.ETLLog;
@@ -156,10 +157,18 @@ public class ETLServiceImpl implements ETLService {
         return vo;
     }
 
-    private ETLTaskVO convertToLogVO(ETLLog log) {
-        ETLTaskVO vo = new ETLTaskVO();
+    private ETLLogVO convertToLogVO(ETLLog log) {
+        ETLLogVO vo = new ETLLogVO();
         vo.setId(log.getId());
+        vo.setTaskId(log.getTaskId());
         vo.setStatus(log.getStatus());
+        vo.setStartTime(log.getStartTime() != null ? log.getStartTime().toString() : null);
+        vo.setEndTime(log.getEndTime() != null ? log.getEndTime().toString() : null);
+        vo.setRecordsProcessed(log.getRecordsProcessed());
+        vo.setRecordsSuccess(log.getRecordsSuccess());
+        vo.setRecordsFailed(log.getRecordsFailed());
+        vo.setErrorMessage(log.getErrorMessage());
+        vo.setDetails(log.getDetails());
         return vo;
     }
 }
