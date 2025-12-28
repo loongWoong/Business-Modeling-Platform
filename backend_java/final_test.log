@@ -1,0 +1,58 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2025-12-28 15:40:16 - Starting PlatformApplication v1.0.0 using Java 17.0.14 with PID 38499 (/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/target/platform-1.0.0.jar started by wanglongzhen in /Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java)
+2025-12-28 15:40:16 - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-12-28 15:40:16 - No active profile set, falling back to 1 default profile: "default"
+2025-12-28 15:40:16 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-28 15:40:16 - Finished Spring Data repository scanning in 31 ms. Found 9 JPA repository interfaces.
+2025-12-28 15:40:16 - Logging initialized using 'class org.apache.ibatis.logging.slf4j.Slf4jImpl' adapter.
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'propertyMapper' and 'com.jianmo.platform.mapper.PropertyMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'ETLLogMapper' and 'com.jianmo.platform.mapper.ETLLogMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'modelMapper' and 'com.jianmo.platform.mapper.ModelMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'ETLTaskMapper' and 'com.jianmo.platform.mapper.ETLTaskMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'domainMapper' and 'com.jianmo.platform.mapper.DomainMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'modelTableAssociationMapper' and 'com.jianmo.platform.mapper.ModelTableAssociationMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'mappingMapper' and 'com.jianmo.platform.mapper.MappingMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'datasourceMapper' and 'com.jianmo.platform.mapper.DatasourceMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - Skipping MapperFactoryBean with name 'relationMapper' and 'com.jianmo.platform.mapper.RelationMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:40:16 - No MyBatis mapper was found in '[com.jianmo.platform.mapper]' package. Please check your configuration.
+2025-12-28 15:40:17 - Tomcat initialized with port 5001 (http)
+2025-12-28 15:40:17 - Starting service [Tomcat]
+2025-12-28 15:40:17 - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-12-28 15:40:17 - Initializing Spring embedded WebApplicationContext
+2025-12-28 15:40:17 - Root WebApplicationContext: initialization completed in 691 ms
+2025-12-28 15:40:17 - HikariCP-jianmo - Starting...
+2025-12-28 15:40:18 - HikariCP-jianmo - Driver does not support get/set network timeout for connections. (getNetworkTimeout)
+2025-12-28 15:40:18 - HikariCP-jianmo - Added connection org.duckdb.DuckDBConnection@193bb809
+2025-12-28 15:40:18 - HikariCP-jianmo - Start completed.
+2025-12-28 15:40:18 - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'modelController' defined in URL [jar:nested:/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/target/platform-1.0.0.jar/!BOOT-INF/classes/!/com/jianmo/platform/controller/ModelController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'modelServiceImpl' defined in URL [jar:nested:/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/target/platform-1.0.0.jar/!BOOT-INF/classes/!/com/jianmo/platform/service/impl/ModelServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'modelMapper' defined in URL [jar:nested:/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/target/platform-1.0.0.jar/!BOOT-INF/classes/!/com/jianmo/platform/mapper/ModelMapper.class]: Unsatisfied dependency expressed through bean property 'sqlSessionFactory': Error creating bean with name 'sqlSessionFactory' defined in class path resource [org/mybatis/spring/boot/autoconfigure/MybatisAutoConfiguration.class]: Unsatisfied dependency expressed through method 'sqlSessionFactory' parameter 0: Error creating bean with name 'dataSource': Could not bind properties to 'DataSource' : prefix=spring.datasource, ignoreInvalidFields=false, ignoreUnknownFields=true
+2025-12-28 15:40:18 - Stopping service [Tomcat]
+2025-12-28 15:40:18 - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-28 15:40:18 - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Failed to bind properties under 'spring.datasource' to javax.sql.DataSource:
+
+    Property: spring.datasource.driver-class-name
+    Value: "org.duckdb.DuckDBDriver"
+    Origin: class path resource [application.yml] from platform-1.0.0.jar - 11:24
+    Reason: java.lang.IllegalStateException: The configuration of the pool is sealed once started. Use HikariConfigMXBean for runtime changes.
+
+Action:
+
+Update your application's configuration
+

@@ -1,0 +1,48 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2025-12-28 15:39:21 - Starting PlatformApplication v1.0.0 using Java 17.0.14 with PID 37308 (/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/target/platform-1.0.0.jar started by wanglongzhen in /Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java)
+2025-12-28 15:39:21 - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-12-28 15:39:21 - No active profile set, falling back to 1 default profile: "default"
+2025-12-28 15:39:21 - Logging initialized using 'class org.apache.ibatis.logging.slf4j.Slf4jImpl' adapter.
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'propertyMapper' and 'com.jianmo.platform.mapper.PropertyMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'ETLLogMapper' and 'com.jianmo.platform.mapper.ETLLogMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'modelMapper' and 'com.jianmo.platform.mapper.ModelMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'ETLTaskMapper' and 'com.jianmo.platform.mapper.ETLTaskMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'domainMapper' and 'com.jianmo.platform.mapper.DomainMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'modelTableAssociationMapper' and 'com.jianmo.platform.mapper.ModelTableAssociationMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'mappingMapper' and 'com.jianmo.platform.mapper.MappingMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'datasourceMapper' and 'com.jianmo.platform.mapper.DatasourceMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - Skipping MapperFactoryBean with name 'relationMapper' and 'com.jianmo.platform.mapper.RelationMapper' mapperInterface. Bean already defined with the same name!
+2025-12-28 15:39:21 - No MyBatis mapper was found in '[com.jianmo.platform.mapper]' package. Please check your configuration.
+2025-12-28 15:39:21 - Tomcat initialized with port 5001 (http)
+2025-12-28 15:39:21 - Starting service [Tomcat]
+2025-12-28 15:39:21 - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-12-28 15:39:21 - Initializing Spring embedded WebApplicationContext
+2025-12-28 15:39:21 - Root WebApplicationContext: initialization completed in 571 ms
+2025-12-28 15:39:21 - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'modelController' defined in URL [jar:nested:/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/target/platform-1.0.0.jar/!BOOT-INF/classes/!/com/jianmo/platform/controller/ModelController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'modelServiceImpl' defined in URL [jar:nested:/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/target/platform-1.0.0.jar/!BOOT-INF/classes/!/com/jianmo/platform/service/impl/ModelServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'modelMapper' defined in URL [jar:nested:/Users/wanglongzhen/Downloads/newmodel/jianmo-demo/backend_java/target/platform-1.0.0.jar/!BOOT-INF/classes/!/com/jianmo/platform/mapper/ModelMapper.class]: Unsatisfied dependency expressed through bean property 'sqlSessionFactory': Error creating bean with name 'sqlSessionFactory' defined in class path resource [com/jianmo/platform/config/MybatisConfig.class]: Unsatisfied dependency expressed through method 'sqlSessionFactory' parameter 0: No qualifying bean of type 'javax.sql.DataSource' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+2025-12-28 15:39:21 - Stopping service [Tomcat]
+2025-12-28 15:39:21 - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-28 15:39:21 - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 0 of method sqlSessionFactory in com.jianmo.platform.config.MybatisConfig required a bean of type 'javax.sql.DataSource' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'javax.sql.DataSource' in your configuration.
+
