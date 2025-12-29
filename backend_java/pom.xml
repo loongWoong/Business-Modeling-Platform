@@ -20,6 +20,10 @@
     <properties>
         <java.version>1.8</java.version>
         <snakeyaml.version>2.2</snakeyaml.version>
+        <!-- 设置项目编码为UTF-8，解决中文乱码问题 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
     </properties>
 
     <dependencies>
@@ -88,6 +92,7 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <encoding>UTF-8</encoding>
                     <fork>true</fork>
                     <annotationProcessorPaths>
                         <path>
@@ -105,6 +110,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- 强制使用UTF-8编码，解决Windows下中文乱码问题 -->
+                    <jvmArguments>-Dfile.encoding=UTF-8 -Duser.language=zh -Duser.country=CN</jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

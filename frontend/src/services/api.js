@@ -29,7 +29,8 @@ async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   const defaultOptions = {
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json;charset=UTF-8',
+      'Accept': 'application/json;charset=UTF-8',
     },
   };
 
@@ -107,7 +108,21 @@ async function apiRequest(endpoint, options = {}) {
       throw error;
     }
 
-    const text = await response.text();
+    // 确保使用UTF-8编码解析响应
+    // 使用arrayBuffer和TextDecoder确保正确解析UTF-8编码的中文
+    const contentType = response.headers.get('content-type') || '';
+    let text;
+    
+    if (contentType.includes('application/json')) {
+      // 对于JSON响应，使用arrayBuffer确保UTF-8正确解析
+      const buffer = await response.arrayBuffer();
+      const decoder = new TextDecoder('UTF-8');
+      text = decoder.decode(buffer);
+    } else {
+      // 对于其他类型，使用text()方法
+      text = await response.text();
+    }
+    
     if (!text) {
       return null;
     }

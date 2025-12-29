@@ -9,9 +9,18 @@ export default defineConfig({
     port: 3001,
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',
-        changeOrigin: true
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        // 确保代理正确处理UTF-8编码
+        headers: {
+          'Accept': 'application/json;charset=UTF-8',
+          'Accept-Charset': 'UTF-8'
+        }
       }
     }
+  },
+  // 确保构建时使用UTF-8编码
+  build: {
+    charset: 'utf8'
   }
 })

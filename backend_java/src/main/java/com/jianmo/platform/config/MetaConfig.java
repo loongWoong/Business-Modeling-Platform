@@ -19,6 +19,12 @@ public class MetaConfig {
             metaRegistry.register(factory.createDomainMetaModel());
             metaRegistry.register(factory.createMappingMetaModel());
             metaRegistry.register(factory.createRelationMetaModel());
+            // 注册语义层元模型
+            metaRegistry.register(factory.createSharedAttributeMetaModel());
+            metaRegistry.register(factory.createIndicatorMetaModel());
+            metaRegistry.register(factory.createFunctionMetaModel());
+            // 注册数据血缘元模型
+            metaRegistry.register(factory.createDataLineageMetaModel());
         };
     }
 }

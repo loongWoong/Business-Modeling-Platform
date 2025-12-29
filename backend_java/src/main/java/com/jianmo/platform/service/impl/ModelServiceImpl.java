@@ -235,9 +235,10 @@ public class ModelServiceImpl implements ModelService {
         ModelVO vo = new ModelVO();
         vo.setId(model.getId());
         vo.setCode(model.getCode());
-        vo.setName(model.getName());
-        vo.setDescription(model.getDescription());
-        vo.setCreator(model.getCreator());
+        // 修复可能存在的乱码数据（GBK字节被错误解释为UTF-8）
+        vo.setName(com.jianmo.platform.utils.EncodingFixer.smartFix(model.getName()));
+        vo.setDescription(com.jianmo.platform.utils.EncodingFixer.smartFix(model.getDescription()));
+        vo.setCreator(com.jianmo.platform.utils.EncodingFixer.smartFix(model.getCreator()));
         vo.setDomainId(model.getDomainId());
         vo.setUpdatedAt(model.getUpdatedAt() != null ? model.getUpdatedAt().toString() : null);
         return vo;
@@ -258,31 +259,33 @@ public class ModelServiceImpl implements ModelService {
     private PropertyVO convertToPropertyVO(Property property) {
         PropertyVO vo = new PropertyVO();
         vo.setId(property.getId());
-        vo.setName(property.getName());
+        // 修复可能存在的乱码数据
+        vo.setName(com.jianmo.platform.utils.EncodingFixer.smartFix(property.getName()));
         vo.setCode(property.getCode());
         vo.setType(property.getType());
         vo.setModelId(property.getModelId());
         vo.setIsRequired(property.getIsRequired());
-        vo.setDescription(property.getDescription());
+        vo.setDescription(com.jianmo.platform.utils.EncodingFixer.smartFix(property.getDescription()));
         vo.setIsPrimaryKey(property.getIsPrimaryKey());
         vo.setIsForeignKey(property.getIsForeignKey());
-        vo.setDefaultValue(property.getDefaultValue());
+        vo.setDefaultValue(com.jianmo.platform.utils.EncodingFixer.smartFix(property.getDefaultValue()));
         vo.setSensitivityLevel(property.getSensitivityLevel());
-        vo.setMaskRule(property.getMaskRule());
-        vo.setPhysicalColumn(property.getPhysicalColumn());
-        vo.setForeignKeyTable(property.getForeignKeyTable());
-        vo.setForeignKeyColumn(property.getForeignKeyColumn());
+        vo.setMaskRule(com.jianmo.platform.utils.EncodingFixer.smartFix(property.getMaskRule()));
+        vo.setPhysicalColumn(com.jianmo.platform.utils.EncodingFixer.smartFix(property.getPhysicalColumn()));
+        vo.setForeignKeyTable(com.jianmo.platform.utils.EncodingFixer.smartFix(property.getForeignKeyTable()));
+        vo.setForeignKeyColumn(com.jianmo.platform.utils.EncodingFixer.smartFix(property.getForeignKeyColumn()));
         return vo;
     }
 
     private RelationVO convertToRelationVO(Relation relation) {
         RelationVO vo = new RelationVO();
         vo.setId(relation.getId());
-        vo.setName(relation.getName());
+        // 修复可能存在的乱码数据
+        vo.setName(com.jianmo.platform.utils.EncodingFixer.smartFix(relation.getName()));
         vo.setSourceModelId(relation.getSourceModelId());
         vo.setTargetModelId(relation.getTargetModelId());
         vo.setType(relation.getType());
-        vo.setDescription(relation.getDescription());
+        vo.setDescription(com.jianmo.platform.utils.EncodingFixer.smartFix(relation.getDescription()));
         vo.setIsEnabled(relation.getIsEnabled());
         return vo;
     }

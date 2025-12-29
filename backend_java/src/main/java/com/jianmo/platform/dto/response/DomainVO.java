@@ -9,5 +9,10 @@ public class DomainVO {
     private String name;
     private String description;
     private String owner;
+    private String domainType;
+    private Boolean isActive;
+    private Integer modelQuota;
+    private String permissions;
+    private String workspaceConfig;
     private String updatedAt;
 }

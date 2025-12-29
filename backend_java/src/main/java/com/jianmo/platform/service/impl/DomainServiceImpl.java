@@ -52,6 +52,11 @@ public class DomainServiceImpl implements DomainService {
         domain.setName(dto.getName());
         domain.setDescription(dto.getDescription());
         domain.setOwner(dto.getOwner());
+        domain.setDomainType(dto.getDomainType() != null ? dto.getDomainType() : "category");
+        domain.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
+        domain.setModelQuota(dto.getModelQuota());
+        domain.setPermissions(dto.getPermissions());
+        domain.setWorkspaceConfig(dto.getWorkspaceConfig());
         domain.setCreatedAt(LocalDateTime.now());
         domain.setUpdatedAt(LocalDateTime.now());
 
@@ -105,9 +110,15 @@ public class DomainServiceImpl implements DomainService {
         DomainVO vo = new DomainVO();
         vo.setId(domain.getId());
         vo.setCode(domain.getCode());
-        vo.setName(domain.getName());
-        vo.setDescription(domain.getDescription());
-        vo.setOwner(domain.getOwner());
+        // 修复可能存在的乱码数据（GBK字节被错误解释为UTF-8）
+        vo.setName(com.jianmo.platform.utils.EncodingFixer.smartFix(domain.getName()));
+        vo.setDescription(com.jianmo.platform.utils.EncodingFixer.smartFix(domain.getDescription()));
+        vo.setOwner(com.jianmo.platform.utils.EncodingFixer.smartFix(domain.getOwner()));
+        vo.setDomainType(domain.getDomainType());
+        vo.setIsActive(domain.getIsActive());
+        vo.setModelQuota(domain.getModelQuota());
+        vo.setPermissions(com.jianmo.platform.utils.EncodingFixer.smartFix(domain.getPermissions()));
+        vo.setWorkspaceConfig(com.jianmo.platform.utils.EncodingFixer.smartFix(domain.getWorkspaceConfig()));
         vo.setUpdatedAt(domain.getUpdatedAt() != null ? domain.getUpdatedAt().toString() : null);
         return vo;
     }

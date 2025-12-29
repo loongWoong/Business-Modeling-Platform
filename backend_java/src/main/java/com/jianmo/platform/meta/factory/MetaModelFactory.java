@@ -99,7 +99,7 @@ public class MetaModelFactory {
         MetaModel model = new MetaModel();
         model.setCode("domain");
         model.setName("领域");
-        model.setDescription("领域分类定义");
+        model.setDescription("领域分类定义（支持workspace和category两种类型）");
         model.setType(MetaType.ENTITY);
 
         List<MetaProperty> properties = new ArrayList<>();
@@ -108,6 +108,11 @@ public class MetaModelFactory {
         properties.add(createProperty("name", "领域名称", "STRING", true, true, 1, 100, null));
         properties.add(createProperty("description", "描述", "STRING", false, false, 0, 500, null));
         properties.add(createProperty("owner", "所有者", "STRING", false, false, 0, 100, null));
+        properties.add(createProperty("domainType", "领域类型", "STRING", false, false, null, null, null));
+        properties.add(createProperty("isActive", "是否激活", "BOOLEAN", false, false, null, null, null));
+        properties.add(createProperty("modelQuota", "模型配额", "INTEGER", false, false, null, null, null));
+        properties.add(createProperty("permissions", "权限配置", "TEXT", false, false, null, null, null));
+        properties.add(createProperty("workspaceConfig", "工作空间配置", "TEXT", false, false, null, null, null));
 
         model.setProperties(properties);
 
@@ -150,6 +155,89 @@ public class MetaModelFactory {
 
         model.setProperties(properties);
 
+        return model;
+    }
+
+    public MetaModel createSharedAttributeMetaModel() {
+        MetaModel model = new MetaModel();
+        model.setCode("shared_attribute");
+        model.setName("共享属性");
+        model.setDescription("语义层-可在多个模型中复用的属性定义");
+        model.setType(MetaType.ENTITY);
+
+        List<MetaProperty> properties = new ArrayList<>();
+        properties.add(createProperty("id", "共享属性ID", "LONG", true, true, null, null, null));
+        properties.add(createProperty("code", "属性编码", "STRING", true, true, 1, 50, "^[a-zA-Z][a-zA-Z0-9_]*$"));
+        properties.add(createProperty("name", "属性名称", "STRING", true, false, 1, 100, null));
+        properties.add(createProperty("type", "属性类型", "STRING", true, false, 1, 50, null));
+        properties.add(createProperty("domainId", "领域ID", "LONG", false, false, null, null, null));
+        properties.add(createProperty("description", "描述", "STRING", false, false, 0, 500, null));
+        properties.add(createProperty("isRequired", "是否必填", "BOOLEAN", false, false, null, null, null));
+        properties.add(createProperty("sensitivityLevel", "敏感级别", "STRING", false, false, null, null, null));
+
+        model.setProperties(properties);
+        return model;
+    }
+
+    public MetaModel createIndicatorMetaModel() {
+        MetaModel model = new MetaModel();
+        model.setCode("indicator");
+        model.setName("指标");
+        model.setDescription("语义层-业务指标定义");
+        model.setType(MetaType.ENTITY);
+
+        List<MetaProperty> properties = new ArrayList<>();
+        properties.add(createProperty("id", "指标ID", "LONG", true, true, null, null, null));
+        properties.add(createProperty("code", "指标编码", "STRING", true, true, 1, 50, "^[a-zA-Z][a-zA-Z0-9_]*$"));
+        properties.add(createProperty("name", "指标名称", "STRING", true, false, 1, 100, null));
+        properties.add(createProperty("expression", "计算表达式", "TEXT", true, false, null, null, null));
+        properties.add(createProperty("domainId", "领域ID", "LONG", false, false, null, null, null));
+        properties.add(createProperty("returnType", "返回类型", "STRING", false, false, null, null, null));
+        properties.add(createProperty("status", "状态", "STRING", false, false, null, null, null));
+
+        model.setProperties(properties);
+        return model;
+    }
+
+    public MetaModel createFunctionMetaModel() {
+        MetaModel model = new MetaModel();
+        model.setCode("function");
+        model.setName("函数");
+        model.setDescription("语义层-可复用的计算函数定义");
+        model.setType(MetaType.ENTITY);
+
+        List<MetaProperty> properties = new ArrayList<>();
+        properties.add(createProperty("id", "函数ID", "LONG", true, true, null, null, null));
+        properties.add(createProperty("code", "函数编码", "STRING", true, true, 1, 50, "^[a-zA-Z][a-zA-Z0-9_]*$"));
+        properties.add(createProperty("name", "函数名称", "STRING", true, false, 1, 100, null));
+        properties.add(createProperty("implementation", "函数实现", "TEXT", true, false, null, null, null));
+        properties.add(createProperty("domainId", "领域ID", "LONG", false, false, null, null, null));
+        properties.add(createProperty("functionType", "函数类型", "STRING", false, false, null, null, null));
+        properties.add(createProperty("returnType", "返回类型", "STRING", false, false, null, null, null));
+        properties.add(createProperty("status", "状态", "STRING", false, false, null, null, null));
+
+        model.setProperties(properties);
+        return model;
+    }
+
+    public MetaModel createDataLineageMetaModel() {
+        MetaModel model = new MetaModel();
+        model.setCode("data_lineage");
+        model.setName("数据血缘");
+        model.setDescription("数据血缘关系定义");
+        model.setType(MetaType.ENTITY);
+
+        List<MetaProperty> properties = new ArrayList<>();
+        properties.add(createProperty("id", "血缘ID", "LONG", true, true, null, null, null));
+        properties.add(createProperty("sourceModelId", "源模型ID", "LONG", true, false, null, null, null));
+        properties.add(createProperty("targetModelId", "目标模型ID", "LONG", true, false, null, null, null));
+        properties.add(createProperty("sourceProperty", "源属性", "STRING", false, false, null, null, null));
+        properties.add(createProperty("targetProperty", "目标属性", "STRING", false, false, null, null, null));
+        properties.add(createProperty("lineageType", "血缘类型", "STRING", false, false, null, null, null));
+        properties.add(createProperty("transformation", "转换规则", "TEXT", false, false, null, null, null));
+        properties.add(createProperty("confidenceScore", "置信度", "DOUBLE", false, false, null, null, null));
+
+        model.setProperties(properties);
         return model;
     }
 

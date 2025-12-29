@@ -13,4 +13,9 @@ public class DomainCreateDTO {
 
     private String description;
     private String owner;
+    private String domainType = "category";  // workspace 或 category
+    private Boolean isActive = true;
+    private Integer modelQuota;
+    private String permissions;
+    private String workspaceConfig;
 }
