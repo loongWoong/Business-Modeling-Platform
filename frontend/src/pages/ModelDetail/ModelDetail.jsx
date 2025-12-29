@@ -20,6 +20,7 @@ import ActionManager from './modules/ActionManager';
 import ApiManager from './modules/ApiManager';
 import FunctionManager from './modules/FunctionManager';
 import BloodlineAnalyzer from './modules/BloodlineAnalyzer';
+import LineageView from './modules/LineageView';
 
 const ModelDetail = () => {
   const { modelId } = useParams();
@@ -635,6 +636,12 @@ const ModelDetail = () => {
           血缘分析
         </button>
         <button
+          className={activeTab === 'lineage' ? 'active' : ''}
+          onClick={() => setActiveTab('lineage')}
+        >
+          数据血缘
+        </button>
+        <button
           className={activeTab === 'api' ? 'active' : ''}
           onClick={() => setActiveTab('api')}
         >
@@ -775,6 +782,11 @@ const ModelDetail = () => {
             allData={{ models: allModels, properties: properties }}
             relations={relations}
           />
+        )}
+
+        {/* 数据血缘可视化Tab */}
+        {activeTab === 'lineage' && modelId && (
+          <LineageView modelId={parseInt(modelId)} />
         )}
 
         {/* API接口管理Tab */}

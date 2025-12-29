@@ -9,6 +9,7 @@ import {
   LinkOutlined,
   SwapOutlined
 } from '@ant-design/icons';
+import WorkspaceSwitcher from './WorkspaceSwitcher';
 
 const { Sider } = Layout;
 
@@ -104,7 +105,7 @@ const NavigationMenu = ({ onCollapse }) => {
       collapsible
       collapsed={collapsed}
       onCollapse={handleCollapse}
-      width={200}
+      width={240}
       theme="dark"
       style={{
         overflow: 'auto',
@@ -130,6 +131,8 @@ const NavigationMenu = ({ onCollapse }) => {
           {collapsed ? 'MM' : '业务建模平台'}
         </span>
       </div>
+
+      {!collapsed && <WorkspaceSwitcher />}
 
       <Menu
         theme="dark"

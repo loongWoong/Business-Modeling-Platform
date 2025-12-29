@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Typography, Tag, Space } from 'antd';
 import { domainAPI, modelAPI, propertyAPI, sharedAttributeAPI, relationAPI, indicatorAPI, datasourceAPI } from '../../services/api';
+import { ApartmentOutlined } from '@ant-design/icons';
 import ModelMap from './modules/ModelMap';
+
+const { Text } = Typography;
 import ModelManager from './modules/ModelManager';
 import SharedAttributeManager from './modules/SharedAttributeManager';
 import RelationManager from './modules/RelationManager';
@@ -204,12 +208,19 @@ const DomainWorkbench = () => {
 
         // 获取当前域详情
         try {
-          const domainData = await domainAPI.getAll();
-          const domains = Array.isArray(domainData) ? domainData : (domainData.domains || []);
-          const domain = domains.find(d => d.id === parseInt(domainId));
+          const domain = await domainAPI.getById(domainId);
           setCurrentDomain(domain);
         } catch (error) {
           console.error('Failed to fetch domain:', error);
+          // 如果 getById 失败，尝试从 getAll 中查找
+          try {
+            const domainData = await domainAPI.getAll();
+            const domains = Array.isArray(domainData) ? domainData : [];
+            const domain = domains.find(d => d.id === parseInt(domainId));
+            setCurrentDomain(domain);
+          } catch (err) {
+            console.error('Failed to fetch domain from list:', err);
+          }
         }
 
         // 从后端API获取共享属性数据（如果API不存在，使用空数组）
@@ -980,12 +991,57 @@ const DomainWorkbench = () => {
         </span>
         <span style={{ marginRight: '8px' }}>&gt;</span>
         <span style={{ fontWeight: 'bold' }}>{currentDomain?.name || `域ID: ${domainId}`}</span>
-        <span style={{ marginLeft: '8px', fontSize: '12px', color: '#8c8c8c' }}>
-          (Domain分类维度)
-        </span>
+        {currentDomain && (
+          <Tag color={currentDomain.domainType === 'workspace' ? 'blue' : 'default'} style={{ marginLeft: '8px' }}>
+            {currentDomain.domainType === 'workspace' ? '工作空间' : '分类维度'}
+          </Tag>
+        )}
       </div>
       
       {/* 顶部标题和快速导航 */}
+      {/* 工作空间信息栏 */}
+      {currentDomain && currentDomain.domainType === 'workspace' && (
+        <div style={{ 
+          padding: '12px 16px', 
+          backgroundColor: '#e6f7ff', 
+          borderBottom: '1px solid #91d5ff',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Space size="middle">
+            <ApartmentOutlined style={{ color: '#1890ff', fontSize: '18px' }} />
+            <div>
+              <div style={{ fontWeight: 500, fontSize: '14px', color: '#1890ff' }}>
+                {currentDomain.name} - 工作空间
+              </div>
+              {currentDomain.modelQuota ? (
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  模型配额: {models.length} / {currentDomain.modelQuota}
+                  {models.length >= currentDomain.modelQuota && (
+                    <Tag color="red" style={{ marginLeft: '8px' }}>配额已满</Tag>
+                  )}
+                </div>
+              ) : (
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  模型数量: {models.length} (无限制)
+                </div>
+              )}
+            </div>
+          </Space>
+          <Space>
+            {currentDomain.description && (
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                {currentDomain.description}
+              </Text>
+            )}
+            {currentDomain.owner && (
+              <Tag color="blue">负责人: {currentDomain.owner}</Tag>
+            )}
+          </Space>
+        </div>
+      )}
+
       <div style={{ padding: '16px', backgroundColor: 'white', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0 }}>业务域工作台</h2>
         <div style={{ display: 'flex', gap: '12px', fontSize: '14px' }}>

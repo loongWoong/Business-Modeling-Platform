@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Modal, Form, Input, message, Tag, Space, Typography, Row, Col } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOpenOutlined, DatabaseOutlined, ApiOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Modal, Form, Input, message, Tag, Space, Typography, Row, Col, Select, InputNumber, Tooltip, Progress } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOpenOutlined, DatabaseOutlined, ApiOutlined, ApartmentOutlined, TagOutlined } from '@ant-design/icons';
 import { domainAPI, modelAPI, datasourceAPI } from '../../services/api';
 
 const { Text } = Typography;
@@ -71,7 +71,11 @@ const DomainManager = () => {
     form.setFieldsValue({
       name: domain.name,
       code: domain.code,
-      description: domain.description
+      description: domain.description,
+      owner: domain.owner || '',
+      domainType: domain.domainType || 'category',
+      isActive: domain.isActive !== false,
+      modelQuota: domain.modelQuota
     });
     setIsModalOpen(true);
   };
@@ -120,8 +124,17 @@ const DomainManager = () => {
       key: 'name',
       render: (name, record) => (
         <div>
-          <div style={{ fontWeight: 500, fontSize: '14px' }}>{name}</div>
-          <Text type="secondary" style={{ fontSize: '12px' }}>编码: {record.code}</Text>
+          <Space>
+            <div style={{ fontWeight: 500, fontSize: '14px' }}>{name}</div>
+            {record.domainType === 'workspace' ? (
+              <Tag icon={<ApartmentOutlined />} color="blue">工作空间</Tag>
+            ) : (
+              <Tag icon={<TagOutlined />} color="default">分类</Tag>
+            )}
+          </Space>
+          <div>
+            <Text type="secondary" style={{ fontSize: '12px' }}>编码: {record.code}</Text>
+          </div>
         </div>
       )
     },
@@ -156,12 +169,42 @@ const DomainManager = () => {
       }
     },
     {
+      title: '资源配额',
+      key: 'quota',
+      render: (_, record) => {
+        if (record.domainType === 'workspace') {
+          const modelCount = (models[record.id] || []).length;
+          const quota = record.modelQuota;
+          if (quota) {
+            const percent = Math.min(100, Math.round((modelCount / quota) * 100));
+            return (
+              <Tooltip title={`已使用 ${modelCount}/${quota} 个模型`}>
+                <Progress 
+                  percent={percent} 
+                  size="small"
+                  status={modelCount >= quota ? 'exception' : 'active'}
+                />
+              </Tooltip>
+            );
+          }
+          return <Text type="secondary">无限制</Text>;
+        }
+        return <Text type="secondary">-</Text>;
+      }
+    },
+    {
+      title: '负责人',
+      dataIndex: 'owner',
+      key: 'owner',
+      render: (owner) => owner ? <Tag color="blue">{owner}</Tag> : <Text type="secondary">-</Text>
+    },
+    {
       title: '状态',
-      dataIndex: 'enabled',
-      key: 'enabled',
-      render: (enabled) => (
-        <Tag color={enabled ? 'green' : 'red'}>
-          {enabled ? '启用' : '禁用'}
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive) => (
+        <Tag color={isActive !== false ? 'green' : 'red'}>
+          {isActive !== false ? '启用' : '禁用'}
         </Tag>
       )
     },
@@ -176,7 +219,7 @@ const DomainManager = () => {
             icon={<FolderOpenOutlined />}
             onClick={() => handleViewDomain(record.id)}
           >
-            查看
+            {record.domainType === 'workspace' ? '进入工作空间' : '查看'}
           </Button>
           <Button
             type="link"
@@ -276,7 +319,10 @@ const DomainManager = () => {
         <Form
           form={form}
           layout="vertical"
-          initialValues={{ enabled: true }}
+          initialValues={{ 
+            domainType: 'category',
+            isActive: true 
+          }}
         >
           <Form.Item
             label="业务域名称"
@@ -298,10 +344,64 @@ const DomainManager = () => {
           </Form.Item>
 
           <Form.Item
+            label="类型"
+            name="domainType"
+            rules={[{ required: true, message: '请选择类型' }]}
+          >
+            <Select placeholder="请选择类型">
+              <Select.Option value="category">分类维度</Select.Option>
+              <Select.Option value="workspace">工作空间</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) => prevValues.domainType !== currentValues.domainType}
+          >
+            {({ getFieldValue }) => {
+              const domainType = getFieldValue('domainType');
+              if (domainType === 'workspace') {
+                return (
+                  <Form.Item
+                    label="模型配额"
+                    name="modelQuota"
+                    tooltip="限制该工作空间可创建的模型数量，留空表示无限制"
+                  >
+                    <InputNumber 
+                      min={1} 
+                      placeholder="留空表示无限制"
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                );
+              }
+              return null;
+            }}
+          </Form.Item>
+
+          <Form.Item
+            label="负责人"
+            name="owner"
+          >
+            <Input placeholder="请输入负责人姓名" />
+          </Form.Item>
+
+          <Form.Item
             label="描述"
             name="description"
           >
             <TextArea rows={3} placeholder="请输入业务域描述" />
+          </Form.Item>
+
+          <Form.Item
+            label="状态"
+            name="isActive"
+            initialValue={true}
+          >
+            <Select>
+              <Select.Option value={true}>启用</Select.Option>
+              <Select.Option value={false}>禁用</Select.Option>
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

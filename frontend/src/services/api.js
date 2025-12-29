@@ -523,6 +523,33 @@ export const indicatorAPI = {
 };
 
 /**
+ * Data Lineage API - 数据血缘管理
+ */
+export const lineageAPI = {
+  getByModel: (modelId, type) => {
+    const endpoint = type 
+      ? `/api/lineage/model/${modelId}?type=${type}`
+      : `/api/lineage/model/${modelId}`;
+    return apiRequest(endpoint);
+  },
+
+  getForward: (modelId) => apiRequest(`/api/lineage/model/${modelId}/forward`),
+
+  getReverse: (modelId) => apiRequest(`/api/lineage/model/${modelId}/reverse`),
+
+  getEndToEnd: (modelId) => apiRequest(`/api/lineage/model/${modelId}/end-to-end`),
+
+  create: (data) => apiRequest('/api/lineage', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  delete: (id) => apiRequest(`/api/lineage/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+/**
  * Data API - 数据记录
  */
 export const dataAPI = {
@@ -612,5 +639,6 @@ export default {
   function: functionAPI,
   modelTableAssociation: modelTableAssociationAPI,
   etl: etlAPI,
+  lineage: lineageAPI,
   health: healthAPI,
 };

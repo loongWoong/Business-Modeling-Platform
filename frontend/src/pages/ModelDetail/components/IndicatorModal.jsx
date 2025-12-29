@@ -344,7 +344,7 @@ const IndicatorModal = ({
                     placeholder="选择操作符"
                   >
                     <Option value="=">= (等于)</Option>
-                    <Option value=">">> (大于)</Option>
+                    <Option value=">">{'> (大于)'}</Option>
                     <Option value="<">{'< (小于)'}</Option>
                     <Option value=">=">{'>= (大于等于)'}</Option>
                     <Option value="<=">{'<= (小于等于)'}</Option>
