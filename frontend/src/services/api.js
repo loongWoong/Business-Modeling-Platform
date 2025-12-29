@@ -21,12 +21,27 @@
  * └─────────────────────────────────────────────────────────────┘
  */
 
+// 开发环境：使用相对路径（空字符串），让Vite代理处理
+// 生产环境：使用完整后端URL
+// 如果开发环境下通过IP访问，相对路径会被代理正确处理
 const API_BASE_URL = import.meta.env.PROD 
-  ? 'http://localhost:5000'
-  : '';
+  ? 'http://127.0.0.1:5000'
+  : ''; // 开发环境使用空字符串，浏览器会使用当前页面的origin（包括IP地址）
 
 async function apiRequest(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint}`;
+  // 构建完整的URL
+  // 开发环境：使用相对路径，让浏览器基于当前页面的origin（包括IP地址）构建完整URL
+  // 生产环境：使用配置的完整URL
+  let url;
+  if (import.meta.env.PROD) {
+    url = `${API_BASE_URL}${endpoint}`;
+  } else {
+    // 开发环境：使用相对路径（以/开头）
+    // 浏览器会自动使用当前页面的 origin（无论是 localhost 还是 IP 地址）
+    // Vite 代理会拦截这些请求并转发到后端
+    // 确保 endpoint 以 / 开头
+    url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  }
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json;charset=UTF-8',
@@ -48,6 +63,10 @@ async function apiRequest(endpoint, options = {}) {
   }
 
   try {
+    // 开发环境下，输出请求URL用于调试
+    if (!import.meta.env.PROD) {
+      console.log(`[API Request] ${options.method || 'GET'} ${url}`);
+    }
     const response = await fetch(url, config);
     
     if (response.status === 204) {
@@ -142,7 +161,7 @@ async function apiRequest(endpoint, options = {}) {
     }
     
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('网络连接失败，请检查后端服务是否运行在 http://localhost:5000');
+      throw new Error('网络连接失败，请检查后端服务是否运行在 http://192.168.22.217:5000');
     }
     throw error;
   }

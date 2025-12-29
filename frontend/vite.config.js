@@ -9,13 +9,17 @@ export default defineConfig({
     port: 3001,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-        // 确保代理正确处理UTF-8编码
-        headers: {
-          'Accept': 'application/json;charset=UTF-8',
-          'Accept-Charset': 'UTF-8'
-        }
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true, // 改变请求头中的 origin，确保后端能够正确识别
+        secure: false, // 如果是 https 接口，需要配置这个参数
+        ws: true, // 支持 websocket
+        rewrite: (path) => path, // 保持路径不变
+        // 配置代理选项，确保跨域请求正常工作
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, res) => {
+            console.error('代理错误:', err);
+          });
+        },
       }
     }
   },

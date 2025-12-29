@@ -28,7 +28,7 @@ public class SwaggerConfig {
                                 .name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0")))
                 .servers(new ArrayList<Server>() {{
-                    add(new Server().url("http://localhost:5001").description("本地开发环境"));
+                    add(new Server().url("http://127.0.0.1:5001").description("本地开发环境"));
                 }});
     }
 }
